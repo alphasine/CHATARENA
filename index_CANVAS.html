@@ -560,6 +560,15 @@
         let ai1Score = 0;
         let ai2Score = 0;
         let judgeFeedbackHistory = [];
+        let textResponseQueue = [];
+        let speechQueueIntervalId = null;
+        let isSpeakingFromQueue = false;
+        const SPEECH_QUEUE_THRESHOLD = 2; 
+        const SPEECH_QUEUE_INTERVAL = 1000; 
+
+        let judgeEvaluationQueue = [];
+        let isProcessingJudgeQueue = false;
+        let judgeQueueIntervalId = null;
 
 
         let debateState = { 
@@ -1450,13 +1459,20 @@ Structure your response with clear headers: "AI1 Feedback:", "AI2 Feedback:", "O
             } else { 
                  if (firstSpeakerInitial === 1) lastAI1Response = `Error: ${firstSpeakerInitialName} failed opening.`; else lastAI2Response = `Error: ${firstSpeakerInitialName} failed opening.`;
             }
-            let speakingPromise1 = speakTextSafe(openingStatement1Result.response, document.getElementById(`AI${firstSpeakerInitial}Voice`).value, firstSpeakerInitial);
+            // Queue the first opening statement for speaking
+            const queuedResponse1 = {
+                text: openingStatement1Result.response,
+                voice: document.getElementById(`AI${firstSpeakerInitial}Voice`).value,
+                aiNumber: firstSpeakerInitial,
+                messageElementSelector: `#chatContent .message:last-child .ai-response` 
+            };
+            textResponseQueue.push(queuedResponse1);
 
             addMessageToChat('System', `Preparing opening volley for ${secondSpeakerInitialName}...`, false, null, true);
             const openingStatement2Promise = prepareOpeningStatement(secondSpeakerInitial, debateState.currentAI2Instructions); 
             
-            await speakingPromise1; 
-            if (!debateActive) return;
+            // No longer awaiting speakingPromise1 here
+            if (!debateActive) return; // Keep this check
             
             debateState.currentTurnNumber++;
             const openingStatement2Result = await openingStatement2Promise;
@@ -1468,6 +1484,14 @@ Structure your response with clear headers: "AI1 Feedback:", "AI2 Feedback:", "O
             } else { 
                 if (secondSpeakerInitial === 1) lastAI1Response = `Error: ${secondSpeakerInitialName} failed opening.`; else lastAI2Response = `Error: ${secondSpeakerInitialName} failed opening.`;
             }
+            // Queue the second opening statement for speaking
+            const queuedResponse2 = {
+                text: openingStatement2Result.response,
+                voice: document.getElementById(`AI${secondSpeakerInitial}Voice`).value,
+                aiNumber: secondSpeakerInitial,
+                messageElementSelector: `#chatContent .message:last-child .ai-response` 
+            };
+            textResponseQueue.push(queuedResponse2);
             
             const openingRoundAI1Speech = firstSpeakerInitial === 1 ? lastAI1Response : lastAI2Response;
             const openingRoundAI2Speech = secondSpeakerInitial === 1 ? lastAI1Response : lastAI2Response;
@@ -1480,7 +1504,7 @@ Last statement from ${document.getElementById('ai2Role').value}: "${openingRound
 Task: Provide scores (-2 to +2) for each AI and if they are ready for the next phase.
 Output ONLY in JSON format using the schema: {"ai1_points_awarded": <num>, "ai2_points_awarded": <num>, "ready_for_next_phase": <bool>}`);
             
-            let speakingPromise2 = speakTextSafe(openingStatement2Result.response, document.getElementById(`AI${secondSpeakerInitial}Voice`).value, secondSpeakerInitial);
+            // No longer calling speakTextSafe for speakingPromise2 here
             
             const judgeScoresDataOpenings = await judgeScoresPromise;
             if (judgeScoresDataOpenings && !judgeScoresDataOpenings.error) {
@@ -1506,8 +1530,8 @@ Task: Provide textual feedback. Structure with headers: "AI1 Feedback:", "AI2 Fe
                 roundSummaryPromise = Promise.resolve("Summary skipped due to score error."); 
             }
 
-            await speakingPromise2; 
-            if (!debateActive) return;
+            // No longer awaiting speakingPromise2 here
+            if (!debateActive) return; // Keep this check
             
             if (judgeFeedbackTextPromise && roundSummaryPromise) { 
                 const [feedbackTextData, summaryText] = await Promise.all([judgeFeedbackTextPromise, roundSummaryPromise]);
@@ -1575,11 +1599,17 @@ Task: Provide textual feedback. Structure with headers: "AI1 Feedback:", "AI2 Fe
                     lastAI2Response = !isApiError(aiResult.response) ? aiResult.response : `Error: ${speakerName} failed to generate a response.`;
                 }
 
-                if (!isApiError(aiResult.response) && !aiResult.response.toLowerCase().includes('my response was blocked')) { 
-                    currentSpeakerTTSpromise = speakTextSafe(aiResult.response, speakerVoice, activeSpeaker); 
-                } else {
-                    currentSpeakerTTSpromise = Promise.resolve();
+                // Queue the AI's response for speaking
+                if (!isApiError(aiResult.response)) { // Only queue if not an API error displayed to user
+                    const queuedResponse = {
+                        text: aiResult.response,
+                        voice: speakerVoice,
+                        aiNumber: activeSpeaker,
+                        messageElementSelector: `#chatContent .message:last-child .ai-response`
+                    };
+                    textResponseQueue.push(queuedResponse);
                 }
+                // currentSpeakerTTSpromise is no longer used here.
                 
                 if (activeSpeaker === aiOrder[0]) { // First speaker of the pair just had their content generated and speech initiated
                     nextSpeakerThinkingPromise = combinedAnalysisAndSpeechPrep( 
@@ -1607,8 +1637,8 @@ Task: Provide scores (-2 to +2) for each AI and if they are ready for the next p
 Output ONLY in JSON format using the schema: {"ai1_points_awarded": <num>, "ai2_points_awarded": <num>, "ready_for_next_phase": <bool>}`);
                 }
                 
-                await currentSpeakerTTSpromise; 
-                if (!debateActive) break;
+                // await currentSpeakerTTSpromise; // This line is removed
+                if (!debateActive) break; // Keep this check
 
                 if (activeSpeaker === aiOrder[1]) { // Second speaker of the pair has finished speaking
                     const scoresData = await judgeScoresPromise;
@@ -1737,7 +1767,17 @@ Please provide a final judgment as a narrative summary, declare a winner (or a n
                         conversationHistory.push({ role: ai1Name, content: ai1ResponseToUser.response });
                     }
                     lastAI1Response = ai1ResponseToUser.response; 
-                    await speakTextSafe(ai1ResponseToUser.response, document.getElementById('AI1Voice').value, 1);
+                    // Queue AI1's response to user
+                    if (!isApiError(ai1ResponseToUser.response)) {
+                        const queuedResponseAI1User = {
+                            text: ai1ResponseToUser.response,
+                            voice: document.getElementById('AI1Voice').value,
+                            aiNumber: 1,
+                            messageElementSelector: '#chatContent .message:last-child .ai-response'
+                        };
+                        textResponseQueue.push(queuedResponseAI1User);
+                    }
+                    // Removed direct call to speakTextSafe for AI1
                     
                     const ai2Name = document.getElementById('ai2Role').value || "AI2";
                     const ai2ResponseToUser = await aiThinkAndRespondToUser(2, userMessage);
@@ -1829,16 +1869,22 @@ Please provide a final judgment as a narrative summary, declare a winner (or a n
             return clean.trim();
         }
 
-        async function speakTextSafe(text, voiceName, aiNumber) { // Added aiNumber
+        async function speakTextSafe(text, voiceName, aiNumber, messageElementForHighlighting = null) { 
             const sidePanel = document.getElementById(aiNumber === 1 ? 'ai1Side' : 'ai2Side');
             if (sidePanel) sidePanel.classList.add('speaking-glow');
 
-            const chatContent = document.getElementById('chatContent');
-            const allAiMessages = Array.from(chatContent.querySelectorAll('.message.ai-message'));
-            const lastVisibleAiMessage = allAiMessages.reverse().find(msg => !msg.classList.contains('silent-message'));
-            const lastMessageElement = lastVisibleAiMessage ? lastVisibleAiMessage.querySelector('.ai-response') : null;
+            let actualMessageElementToHighlight = messageElementForHighlighting;
+            if (!actualMessageElementToHighlight) {
+                const chatContent = document.getElementById('chatContent');
+                const allAiMessages = Array.from(chatContent.querySelectorAll('.message.ai-message:not(.silent-message)'));
+                const lastVisibleAiMessage = allAiMessages.length > 0 ? allAiMessages[allAiMessages.length - 1] : null;
+                actualMessageElementToHighlight = lastVisibleAiMessage ? lastVisibleAiMessage.querySelector('.ai-response') : null;
+                if (actualMessageElementToHighlight) {
+                    console.warn("speakTextSafe called without explicit messageElementForHighlighting, using fallback selector which might be unreliable for queued speech.");
+                }
+            }
             
-            if (lastMessageElement && lastMessageElement.closest('.message').classList.contains('silent-message')) {
+            if (actualMessageElementToHighlight && actualMessageElementToHighlight.closest('.message').classList.contains('silent-message')) {
                  if (sidePanel) sidePanel.classList.remove('speaking-glow');
                 return Promise.resolve(); 
             }
@@ -1858,15 +1904,75 @@ Please provide a final judgment as a narrative summary, declare a winner (or a n
                         console.log(`Speech session ${localSessionId} for AI ${aiNumber} aborted (debateActive: ${debateActive}, session: ${currentSpeechSessionId}).`);
                         return; 
                     }
-                    if (lastMessageElement) highlightChunkInChat(i, lastMessageElement.parentElement);
+                    if (actualMessageElementToHighlight) highlightChunkInChat(i, actualMessageElementToHighlight.parentElement);
                     await speakChunk(chunks[i], voiceName, localSessionId); 
-                    if (localSessionId === currentSpeechSessionId && lastMessageElement) {
-                        const span = lastMessageElement.parentElement.querySelector(`.speech-chunk[data-chunk-index='${i}']`);
+                    if (localSessionId === currentSpeechSessionId && actualMessageElementToHighlight) {
+                        const span = actualMessageElementToHighlight.parentElement.querySelector(`.speech-chunk[data-chunk-index='${i}']`);
                         if (span) span.classList.remove('highlight-chunk');
                     }
                 }
             } finally {
                 if (sidePanel) sidePanel.classList.remove('speaking-glow');
+            }
+        }
+
+        async function processSpeechQueueLogic() {
+            if (!debateActive && textResponseQueue.length === 0) {
+                if (speechQueueIntervalId) {
+                    clearInterval(speechQueueIntervalId);
+                    speechQueueIntervalId = null;
+                    console.log("Speech queue interval STOPPED: Debate inactive and queue empty.");
+                }
+                return;
+            }
+
+            if (isSpeakingFromQueue) {
+                // console.log("Speech queue: Already speaking, skipping this interval cycle.");
+                return;
+            }
+
+            if (textResponseQueue.length === 0) {
+                // console.log("Speech queue: Queue is empty, nothing to process.");
+                return;
+            }
+            
+            if (textResponseQueue.length < SPEECH_QUEUE_THRESHOLD && debateActive) { 
+                // console.log(`Speech queue: Length (${textResponseQueue.length}) is below threshold (${SPEECH_QUEUE_THRESHOLD}) and debate is active, waiting for more items.`);
+                return;
+            }
+
+            isSpeakingFromQueue = true;
+            try {
+                const itemToSpeak = textResponseQueue.shift();
+                if (itemToSpeak) {
+                    // console.log("Speech queue: Dequeued item:", itemToSpeak);
+                    const messageElement = document.querySelector(itemToSpeak.messageElementSelector);
+
+                    if (messageElement) {
+                        await speakTextSafe(itemToSpeak.text, itemToSpeak.voice, itemToSpeak.aiNumber, messageElement);
+                    } else {
+                        console.warn(`Speech queue: Could not find message element with selector "${itemToSpeak.messageElementSelector}" for text: "${itemToSpeak.text.substring(0, 50)}...". Skipping speech.`);
+                    }
+                }
+            } catch (error) {
+                console.error("Speech queue: Error processing item:", error);
+            } finally {
+                isSpeakingFromQueue = false;
+                // console.log("Speech queue: Finished processing item, ready for next.");
+            }
+        }
+
+        function initializeSpeechQueueProcessor() {
+            if (speechQueueIntervalId) {
+                clearInterval(speechQueueIntervalId); // Clear existing interval if any
+            }
+            speechQueueIntervalId = setInterval(processSpeechQueueLogic, SPEECH_QUEUE_INTERVAL);
+            console.log("Speech queue interval STARTED with ID:", speechQueueIntervalId);
+        }
+
+        function ensureSpeechQueueIsActive() {
+            if (!speechQueueIntervalId) {
+                initializeSpeechQueueProcessor();
             }
         }
 
@@ -2370,6 +2476,7 @@ Provide exactly 3 distinct enhanced versions. Return as a JSON array of strings.
             });
             document.getElementById('getStrategyInsightsBtn').disabled = true; 
             document.getElementById('getFullDebateAnalysisBtn').disabled = true; 
+            initializeSpeechQueueProcessor(); // Initialize the speech queue processor once on DOM load
         });
 
         document.getElementById('geminiApiKey').addEventListener('input', function() {
@@ -2492,6 +2599,13 @@ Provide exactly 3 distinct enhanced versions. Return as a JSON array of strings.
             restoreModelAndVoiceSelections(); 
             document.getElementById('getStrategyInsightsBtn').disabled = true;
             document.getElementById('getFullDebateAnalysisBtn').disabled = true;
+            if (speechQueueIntervalId) {
+                clearInterval(speechQueueIntervalId); 
+                speechQueueIntervalId = null;
+            }
+            textResponseQueue.length = 0; 
+            isSpeakingFromQueue = false; 
+            initializeSpeechQueueProcessor(); // Restart the interval
         });
         
         async function findAndSetInitialWorkingModels() { 
@@ -2653,6 +2767,9 @@ Provide exactly 3 distinct enhanced versions. Return as a JSON array of strings.
             }
             
             console.log("Starting debate loop...");
+            textResponseQueue.length = 0; 
+            isSpeakingFromQueue = false; 
+            ensureSpeechQueueIsActive(); 
             debateLoop(); 
         }
 
