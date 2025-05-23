@@ -1496,60 +1496,26 @@ Structure your response with clear headers: "AI1 Feedback:", "AI2 Feedback:", "O
             const openingRoundAI1Speech = firstSpeakerInitial === 1 ? lastAI1Response : lastAI2Response;
             const openingRoundAI2Speech = secondSpeakerInitial === 1 ? lastAI1Response : lastAI2Response;
 
-            addMessageToChat("System", `Judge is evaluating scores for Opening Statements...`, false, null, true);
-            judgeScoresPromise = getJudgeScoresAndReadiness(`Debate Topic: "${document.getElementById('topicInput').value}"
-Current Phase: "Opening Statements"
-Last statement from ${document.getElementById('ai1Role').value}: "${openingRoundAI1Speech}"
-Last statement from ${document.getElementById('ai2Role').value}: "${openingRoundAI2Speech}"
-Task: Provide scores (-2 to +2) for each AI and if they are ready for the next phase.
-Output ONLY in JSON format using the schema: {"ai1_points_awarded": <num>, "ai2_points_awarded": <num>, "ready_for_next_phase": <bool>}`);
-            
-            // No longer calling speakTextSafe for speakingPromise2 here
-            
-            const judgeScoresDataOpenings = await judgeScoresPromise;
-            if (judgeScoresDataOpenings && !judgeScoresDataOpenings.error) {
-                addMessageToChat("System", `Judge is preparing detailed feedback for Opening Statements... Summarizing round...`, false, null, true);
-                const feedbackPromptTextOpenings = `Debate Topic: "${document.getElementById('topicInput').value}"
-Current Phase: "Opening Statements"
-${document.getElementById('ai1Role').value}'s statement: "${openingRoundAI1Speech}" (${document.getElementById('ai1Role').value} awarded ${judgeScoresDataOpenings.ai1_points_awarded} points this round)
-${document.getElementById('ai2Role').value}'s statement: "${openingRoundAI2Speech}" (${document.getElementById('ai2Role').value} awarded ${judgeScoresDataOpenings.ai2_points_awarded} points this round)
-Task: Provide textual feedback. Structure with headers: "AI1 Feedback:", "AI2 Feedback:", "Overall Round Summary:", "Key Talking Points:". Be VERY CONCISE for feedback and key points.`;
-                judgeFeedbackTextPromise = getJudgeTextualFeedback(feedbackPromptTextOpenings);
-                roundSummaryPromise = generateRoundSummaryForPair(
-                    debateState.currentTurnNumber, 
-                    document.getElementById('ai1Role').value, 
-                    document.getElementById('ai2Role').value, 
-                    document.getElementById('topicInput').value,
-                    openingRoundAI1Speech, 
-                    openingRoundAI2Speech
-                );
-            } else {
-                console.error("[DebateLoop-Openings] Failed to get scores from Judge.");
-                lastJudgeFeedback = { ...judgeScoresDataOpenings, ai1_feedback: "Error", ai2_feedback: "Error", overall_round_summary: judgeScoresDataOpenings?.error || "Error fetching scores.", key_talking_points: [] };
-                judgeFeedbackTextPromise = Promise.resolve({error: "Skipped due to score error", ai1_feedback: "Error", ai2_feedback: "Error", overall_round_summary: "Error", key_talking_points: []}); 
-                roundSummaryPromise = Promise.resolve("Summary skipped due to score error."); 
-            }
+            // Queue judge evaluation for Opening Statements
+            const judgeTaskOpenings = {
+                phase: 'Opening Statements',
+                topic: document.getElementById('topicInput').value,
+                ai1Name: document.getElementById('ai1Role').value,
+                ai2Name: document.getElementById('ai2Role').value,
+                ai1Response: openingRoundAI1Speech,
+                ai2Response: openingRoundAI2Speech,
+                currentTurnNumber: debateState.currentTurnNumber,
+                ai1CurrentScore: ai1Score, 
+                ai2CurrentScore: ai2Score,
+            };
+            judgeEvaluationQueue.push(judgeTaskOpenings);
+            console.log("Judge task for Opening Statements queued.");
 
-            // No longer awaiting speakingPromise2 here
+            // No longer awaiting direct judge calls or processing feedback here
             if (!debateActive) return; // Keep this check
             
-            if (judgeFeedbackTextPromise && roundSummaryPromise) { 
-                const [feedbackTextData, summaryText] = await Promise.all([judgeFeedbackTextPromise, roundSummaryPromise]);
-                lastJudgeFeedback = { ...judgeScoresDataOpenings, ...feedbackTextData }; 
-                 if (summaryText && !summaryText.toLowerCase().includes("failed")) {
-                    const roundSummaryFullText = `ROUND SUMMARY (Openings - after Turn ${debateState.currentTurnNumber}):\n${summaryText}`;
-                    updateAIThoughts(1, roundSummaryFullText); 
-                    updateAIThoughts(2, roundSummaryFullText);
-                }
-            }
-            
-            ai1Score += lastJudgeFeedback.ai1_points_awarded || 0;
-            ai2Score += lastJudgeFeedback.ai2_points_awarded || 0;
-            updateScoreDisplay();
-            const finalJudgeMessageOpeningsText = `**Judge's Ruling for Opening Statements:**\n${lastJudgeFeedback.overall_round_summary || 'No summary.'}\n*${document.getElementById('ai1Role').value} Feedback:* ${lastJudgeFeedback.ai1_feedback || 'N/A'} (Points: ${lastJudgeFeedback.ai1_points_awarded || 0})\n*${document.getElementById('ai2Role').value} Feedback:* ${lastJudgeFeedback.ai2_feedback || 'N/A'} (Points: ${lastJudgeFeedback.ai2_points_awarded || 0})\nKey Points: ${(lastJudgeFeedback.key_talking_points || []).join(', ') || 'None identified'}\nReady for Next Phase: ${lastJudgeFeedback.ready_for_next_phase}`;
-            addMessageToChat("Judge", finalJudgeMessageOpeningsText, false, null, false);
-            judgeFeedbackHistory.push(finalJudgeMessageOpeningsText);
-            document.getElementById('judgeFeedbackDisplay').textContent = `Judge (Openings): ${lastJudgeFeedback.overall_round_summary || 'No summary.'}`;
+            // The `lastJudgeFeedback` variable will be updated by the queue processor.
+            // UI updates for scores and judge feedback will also be handled by the queue processor.
 
             // --- MAIN DEBATE PHASES ---
             let activeSpeaker = firstSpeakerInitial; 
@@ -1628,68 +1594,44 @@ Task: Provide textual feedback. Structure with headers: "AI1 Feedback:", "AI2 Fe
                     const currentRoundAI1Speech = aiOrder[0] === 1 ? lastAI1Response : lastAI2Response;
                     const currentRoundAI2Speech = aiOrder[1] === 1 ? lastAI1Response : lastAI2Response; 
                     
-                    addMessageToChat("System", `Judge is evaluating scores for ${currentPhase}...`, false, null, true);
-                    judgeScoresPromise = getJudgeScoresAndReadiness(`Debate Topic: "${document.getElementById('topicInput').value}"
-Current Phase: "${currentPhase}"
-Last statement from ${document.getElementById(`ai${aiOrder[0]}Role`).value}: "${currentRoundAI1Speech}"
-Last statement from ${document.getElementById(`ai${aiOrder[1]}Role`).value}: "${currentRoundAI2Speech}"
-Task: Provide scores (-2 to +2) for each AI and if they are ready for the next phase.
-Output ONLY in JSON format using the schema: {"ai1_points_awarded": <num>, "ai2_points_awarded": <num>, "ready_for_next_phase": <bool>}`);
+                    // Queue judge evaluation for main debate phase
+                    const judgeTaskMain = {
+                        phase: currentPhase,
+                        topic: document.getElementById('topicInput').value,
+                        ai1Name: document.getElementById(`ai${aiOrder[0]}Role`).value,
+                        ai2Name: document.getElementById(`ai${aiOrder[1]}Role`).value,
+                        ai1Response: currentRoundAI1Speech,
+                        ai2Response: currentRoundAI2Speech,
+                        currentTurnNumber: debateState.currentTurnNumber,
+                        ai1CurrentScore: ai1Score,
+                        ai2CurrentScore: ai2Score,
+                    };
+                    judgeEvaluationQueue.push(judgeTaskMain);
+                    console.log(`Judge task for ${currentPhase} queued.`);
                 }
                 
                 // await currentSpeakerTTSpromise; // This line is removed
                 if (!debateActive) break; // Keep this check
 
                 if (activeSpeaker === aiOrder[1]) { // Second speaker of the pair has finished speaking
-                    const scoresData = await judgeScoresPromise;
-                    if (scoresData && !scoresData.error) {
-                        addMessageToChat("System", `Judge is preparing detailed feedback for ${currentPhase}... Summarizing round...`, false, null, true);
-                        const currentRoundAI1SpeechForFeedback = aiOrder[0] === 1 ? lastAI1Response : lastAI2Response;
-                        const currentRoundAI2SpeechForFeedback = aiOrder[1] === 1 ? lastAI1Response : lastAI2Response;
-                         const feedbackPromptText = `Debate Topic: "${document.getElementById('topicInput').value}"
-Current Phase: "${currentPhase}"
-${document.getElementById(`ai${aiOrder[0]}Role`).value}'s statement: "${currentRoundAI1SpeechForFeedback}" (${document.getElementById(`ai${aiOrder[0]}Role`).value} awarded ${scoresData.ai1_points_awarded} points this round)
-${document.getElementById(`ai${aiOrder[1]}Role`).value}'s statement: "${currentRoundAI2SpeechForFeedback}" (${document.getElementById(`ai${aiOrder[1]}Role`).value} awarded ${scoresData.ai2_points_awarded} points this round)
-Task: Provide textual feedback. Structure with headers: "AI1 Feedback:", "AI2 Feedback:", "Overall Round Summary:", "Key Talking Points:". Be VERY CONCISE for feedback and key points.`;
-                        judgeFeedbackTextPromise = getJudgeTextualFeedback(feedbackPromptText);
-                        roundSummaryPromise = generateRoundSummaryForPair(
-                            debateState.currentTurnNumber,
-                            document.getElementById(`ai${aiOrder[0]}Role`).value,
-                            document.getElementById(`ai${aiOrder[1]}Role`).value,
-                            document.getElementById('topicInput').value,
-                            currentRoundAI1SpeechForFeedback,
-                            currentRoundAI2SpeechForFeedback
-                        );
-                        
-                        const [feedbackTextData, summaryText] = await Promise.all([judgeFeedbackTextPromise, roundSummaryPromise]);
-                        lastJudgeFeedback = { ...scoresData, ...feedbackTextData };
-
-                        if (summaryText && !summaryText.toLowerCase().includes("failed")) {
-                            const roundSummaryFullText = `ROUND SUMMARY (${currentPhase} - after Turn ${debateState.currentTurnNumber}):\n${summaryText}`;
-                            updateAIThoughts(1, roundSummaryFullText); 
-                            updateAIThoughts(2, roundSummaryFullText);
-                        }
-                    } else { 
-                        lastJudgeFeedback = { ...scoresData, ai1_feedback: "Error retrieving feedback.", ai2_feedback: "Error retrieving feedback.", overall_round_summary: scoresData?.error || "Error fetching scores.", key_talking_points: [] };
-                    }
-                    
-                    if (!debateActive) break; 
-                    ai1Score += lastJudgeFeedback.ai1_points_awarded || 0; 
-                    ai2Score += lastJudgeFeedback.ai2_points_awarded || 0;
-                    updateScoreDisplay();
-                    const finalJudgeMessage = `**Judge's Ruling for ${currentPhase}:**\n${lastJudgeFeedback.overall_round_summary || 'No summary.'}\n*${document.getElementById(`ai${aiOrder[0]}Role`).value} Feedback:* ${lastJudgeFeedback.ai1_feedback || 'N/A'} (Points: ${lastJudgeFeedback.ai1_points_awarded || 0})\n*${document.getElementById(`ai${aiOrder[1]}Role`).value} Feedback:* ${lastJudgeFeedback.ai2_feedback || 'N/A'} (Points: ${lastJudgeFeedback.ai2_points_awarded || 0})\nKey Points: ${(lastJudgeFeedback.key_talking_points || []).join(', ') || 'None identified'}\nReady for Next Phase: ${lastJudgeFeedback.ready_for_next_phase}`;
-                    addMessageToChat("Judge", finalJudgeMessage, false, null, false);
-                    judgeFeedbackHistory.push(finalJudgeMessage);
-                    document.getElementById('judgeFeedbackDisplay').textContent = `Judge (${currentPhase}): ${lastJudgeFeedback.overall_round_summary || 'No summary.'}`;
+                    // Direct judge processing and UI updates removed. This will be handled by the judge queue processor.
+                    // lastJudgeFeedback is no longer updated here.
                     exchangesInPhase++;
 
+                    // --- Phase Advancement Logic ---
+                    // This logic is now simplified as it can't rely on immediate judge feedback.
+                    // It will advance based on MAX_EXCHANGES_PER_PHASE_HARD_LIMIT.
+                    // The more nuanced advancement based on judge's `ready_for_next_phase` will be handled
+                    // when the judge queue processing results are integrated back into the debate state.
+                    // For now, we comment out the part that depends on `lastJudgeFeedback`.
                     let advancePhase = false;
-                    if ( (lastJudgeFeedback.ready_for_next_phase === true && exchangesInPhase >=1 ) || exchangesInPhase >= MAX_EXCHANGES_PER_PHASE_HARD_LIMIT) {
+                    if (exchangesInPhase >= MAX_EXCHANGES_PER_PHASE_HARD_LIMIT) {
+                    // if ( (lastJudgeFeedback.ready_for_next_phase === true && exchangesInPhase >=1 ) || exchangesInPhase >= MAX_EXCHANGES_PER_PHASE_HARD_LIMIT) { // Original logic
                         if (currentPhaseIndex < debatePhases.length - 1) {
                            advancePhase = true;
                         } else {
                             addMessageToChat('System', "Debate has reached its final phase. Concluding.", false, null, true);
-                            debateActive = false;
+                            debateActive = false; // This will eventually trigger final verdict from judge queue
                         }
                     }
                     
