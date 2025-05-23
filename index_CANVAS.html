@@ -1,0 +1,2722 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Alphasine ChatWizards Pro - Speakers' Corner Edition</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&display=swap');
+
+        :root {
+            --primary-bg: #0D1B2A; 
+            --secondary-bg: #1B263B; 
+            --tertiary-bg: #29374D; 
+            --primary-text-display: #E0E1DD; 
+            --accent-color: #778DA9; 
+            --highlight-color: #38BDF8; 
+            --highlight-color-rgb: 56, 189, 248;
+            --ai-name-color: #80FFA5; 
+            --user-message-bg: #38BDF8; 
+            --user-message-text: #0D1B2A; 
+            --ai-message-bg: #415A77;   
+            --border-color: #415A77;
+            --warning-text: #FFA500; 
+            --judge-bg: #0f3057; 
+            --judge-text: #E0E1DD;
+            --score-color: #FFD700; 
+            --button-secondary-bg: #5A6ACF; 
+        }
+
+        body.dark-theme {
+            --primary-bg: #0A121F;
+            --secondary-bg: #101C2C;
+            --tertiary-bg: #223044; 
+            --primary-text-display: #F0F0F0;
+            --accent-color: #506A88;
+            --highlight-color: #4AC7FF;
+            --highlight-color-rgb: 74, 199, 255;
+            --ai-name-color: #90FFB5;
+            --user-message-bg: #4AC7FF;
+            --user-message-text: #0A121F;
+            --ai-message-bg: #2A3B50;
+            --border-color: #506A88;
+            --judge-bg: #102A43;
+            --button-secondary-bg: #4A5AAF;
+        }
+
+        body {
+            font-family: 'Roboto', sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            background-color: var(--primary-bg);
+            color: var(--primary-text-display); 
+            transition: all 0.3s ease;
+        }
+
+        .main-content {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+        }
+
+        .ai-side {
+            flex: 1;
+            padding: 20px;
+            background-color: var(--secondary-bg);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+            border-radius: 8px; 
+            margin: 10px; 
+            transition: box-shadow 0.3s ease-in-out, border-color 0.3s ease-in-out; 
+            border: 2px solid transparent; 
+        }
+        .ai-side.speaking-glow {
+            box-shadow: 0 0 18px 7px var(--highlight-color), 0 0 35px 12px rgba(var(--highlight-color-rgb), 0.4);
+            border-color: var(--highlight-color);
+        }
+      
+        .chat-container {
+            flex: 2;
+            display: flex;
+            flex-direction: column;
+            background-color: var(--primary-bg); 
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin: 10px 0; 
+            border-radius: 8px; 
+        }
+
+        .chat-header {
+            padding: 15px 20px; 
+            background-color: var(--tertiary-bg);
+            color: var(--primary-text-display);
+            border-top-left-radius: 8px; 
+            border-top-right-radius: 8px; 
+            display: flex;
+            flex-direction: column; 
+            gap: 10px; 
+        }
+        .chat-header-top-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+        }
+        .chat-header h1 {
+            color: var(--primary-text-display); 
+            font-size: 1.5em; 
+            margin: 0;
+        }
+        #currentPhaseDisplay, #scoreDisplay {
+            font-size: 0.9em;
+            color: var(--highlight-color);
+            background-color: var(--secondary-bg);
+            padding: 5px 10px;
+            border-radius: 4px;
+            text-align: center;
+            margin-top: 5px;
+        }
+        #scoreDisplay {
+            color: var(--score-color);
+        }
+        #judgeFeedbackDisplay {
+            font-size: 0.85em;
+            color: var(--judge-text);
+            background-color: var(--judge-bg);
+            padding: 8px;
+            border-radius: 4px;
+            margin-top: 8px;
+            border: 1px solid var(--accent-color);
+            white-space: pre-wrap; 
+            max-height: 150px; 
+            overflow-y: auto;
+        }
+        .header-buttons {
+            display: flex;
+            gap: 10px; 
+            align-items: center; 
+        }
+
+
+        .chat-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        input, textarea, select {
+            width: 100%;
+            padding: 12px; 
+            margin: 10px 0;
+            border: 1px solid var(--border-color);
+            border-radius: 6px; 
+            background-color: var(--tertiary-bg); 
+            color: var(--primary-text-display);
+            font-size: 14px;
+            box-sizing: border-box; 
+        }
+
+        textarea {
+            height: 100px; 
+            resize: vertical;
+        }
+
+        .thoughts {
+            margin-top: 15px; 
+            padding: 15px; 
+            background-color: var(--tertiary-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            flex-grow: 1;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+        }
+        .thoughts h3 {
+            color: var(--primary-text-display); 
+            margin-top: 0;
+            margin-bottom: 10px; 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+        }
+        .toggle-thoughts-btn {
+            font-size: 0.7em;
+            padding: 3px 6px;
+            background-color: var(--accent-color);
+            color: var(--primary-bg);
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+
+        .thoughts-content {
+            overflow-y: auto;
+            max-height: calc(100% - 40px); 
+            display: flex;
+            flex-direction: column-reverse; 
+        }
+        .thoughts-content.collapsed {
+            display: none;
+        }
+
+
+        .message {
+            margin-bottom: 15px;
+            padding: 12px 15px; 
+            border-radius: 10px; 
+            max-width: 80%;
+            line-height: 1.5; 
+            animation: fadeIn 0.5s ease-out;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.15); 
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .user-message {
+            background-color: var(--user-message-bg);
+            color: var(--user-message-text);
+            align-self: flex-end;
+        }
+
+        .ai-message {
+            background-color: var(--ai-message-bg);
+            color: var(--primary-text-display);
+            align-self: flex-start;
+        }
+         .ai-message.silent-message { 
+            opacity: 0.7;
+            border-left: 3px solid var(--accent-color);
+            background-color: rgba(0,0,0,0.1); 
+        }
+        .ai-message.silent-message .ai-name {
+            font-style: italic;
+        }
+        .judge-message {
+            background-color: var(--judge-bg);
+            color: var(--judge-text);
+            align-self: center; 
+            max-width: 90%;
+            border: 1px dashed var(--highlight-color);
+        }
+        .judge-message .ai-name {
+            color: var(--highlight-color);
+        }
+
+
+        .ai-name {
+            font-weight: bold;
+            color: var(--ai-name-color); 
+            margin-bottom: 5px;
+        }
+
+        .thought-item {
+            margin-bottom: 10px;
+            padding: 8px; 
+            border-bottom: 1px solid var(--accent-color); 
+            color: var(--primary-text-display); 
+            font-size: 0.9em;
+            white-space: pre-wrap; 
+        }
+        .thought-item:last-child {
+            border-bottom: none;
+        }
+
+        #themeToggle {
+            background: none;
+            border: none;
+            font-size: 1.5em;
+            cursor: pointer;
+            color: var(--primary-text-display);
+            padding: 5px;
+            border-radius: 50%;
+            transition: background-color 0.3s;
+        }
+        #themeToggle:hover {
+            background-color: rgba(255,255,255,0.1);
+        }
+
+        button, .llm-button { 
+            padding: 10px 15px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: background-color 0.3s ease, box-shadow 0.3s ease;
+            background-color: var(--highlight-color);
+            color: var(--primary-bg); 
+            margin-top: 5px; 
+        }
+        button:hover, .llm-button:hover {
+            background-color: var(--accent-color); 
+            color: var(--primary-text-display);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+        button:disabled, .llm-button:disabled {
+            background-color: var(--accent-color);
+            color: var(--primary-text-display);
+            opacity: 0.7;
+            cursor: not-allowed;
+        }
+        .llm-button { 
+            padding: 8px 12px;
+            font-size: 0.9em;
+            background-color: var(--button-secondary-bg);
+        }
+        .llm-button:hover {
+            background-color: var(--highlight-color);
+        }
+
+
+        #playSampleAI1, #playSampleAI2 {
+            margin-left: 10px;
+            padding: 8px 12px; 
+        }
+
+        #restartDebateButton {
+            background-color: var(--highlight-color); 
+            color: var(--primary-bg);
+        }
+         #restartDebateButton:hover {
+            background-color: var(--accent-color);
+            color: var(--primary-text-display);
+        }
+        .api-key-warning {
+            font-size: 0.8em;
+            color: var(--warning-text);
+            margin-left: 10px;
+        }
+
+        @media (max-width: 768px) {
+            .main-content {
+                flex-direction: column;
+            }
+            .ai-side, .chat-container {
+                width: auto; 
+                margin: 10px; 
+            }
+            .chat-container {
+                margin: 10px; 
+            }
+        }
+
+        .speech-chunk.highlight-chunk {
+            background: linear-gradient(90deg, var(--highlight-color), var(--ai-name-color));
+            color: var(--primary-bg) !important;
+            border-radius: 4px;
+            padding: 2px 4px;
+            transition: background 0.2s;
+        }
+
+        .controls-bar {
+            padding: 15px 20px;
+            background-color: var(--secondary-bg);
+            box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-wrap: wrap; 
+            align-items: center;
+            gap: 16px;
+            border-bottom-left-radius: 8px; 
+            border-bottom-right-radius: 8px;
+            margin: 0 10px 10px 10px; 
+        }
+        .controls-bar label {
+            color: var(--primary-text-display);
+            font-weight: bold;
+        }
+        .controls-bar input[type="text"] {
+            width: 300px; 
+            margin: 0; 
+        }
+        .topic-suggestion-container {
+            margin-top: 5px;
+        }
+        .topic-suggestion-btn {
+            font-size: 0.8em;
+            padding: 4px 8px;
+            margin-right: 5px;
+            margin-bottom: 5px;
+            background-color: var(--accent-color);
+            color: var(--primary-text-display);
+        }
+        .modal {
+            display: none; 
+            position: fixed; 
+            z-index: 100; 
+            left: 0;
+            top: 0;
+            width: 100%; 
+            height: 100%; 
+            overflow: auto; 
+            background-color: rgba(0,0,0,0.6); 
+        }
+        .modal-content {
+            background-color: var(--secondary-bg);
+            margin: 10% auto; 
+            padding: 20px;
+            border: 1px solid var(--border-color);
+            width: 80%; 
+            max-width: 700px;
+            border-radius: 8px;
+            color: var(--primary-text-display);
+        }
+         .modal-content-text-display { 
+            white-space: pre-wrap; 
+            max-height: 60vh;
+            overflow-y: auto;
+            background-color: var(--primary-bg);
+            padding: 15px;
+            border-radius: 6px;
+            border: 1px solid var(--tertiary-bg);
+        }
+        .modal-content h4 { margin-top: 0;}
+        .modal-content ul { list-style: none; padding: 0;}
+        .modal-content li { 
+            padding: 10px; 
+            border-bottom: 1px solid var(--tertiary-bg); 
+            cursor: pointer;
+            border-radius: 4px;
+        }
+        .modal-content li:hover { background-color: var(--tertiary-bg); }
+        .modal-content li:last-child { border-bottom: none; }
+        .close-modal-btn { float: right; font-size: 1.5em; cursor: pointer; }
+
+    </style>
+</head>
+<body>
+    <div class="main-content">
+        <div class="ai-side" id="ai1Side">
+            <input type="text" id="ai1Role" value="AI1" placeholder="AI 1 Role">
+            <textarea id="ai1Instructions" placeholder="AI 1 Core Instructions & Persona..."></textarea>
+            <button class="llm-button" id="enhanceInstructionsAI1">✨ Enhance Instructions</button>
+            <select id="AI1Model" required title="Select Model for AI 1">
+                <option value="" disabled selected>Select Model for AI1</option>
+            </select>
+            <div style="display: flex; align-items: center;">
+                <select id="AI1Voice" required title="Select Voice for AI 1" style="flex-grow: 1;">
+                    <option value="" disabled>Select Voice for AI1</option>
+                </select>
+                <button id="playSampleAI1">Play Sample</button>
+            </div>
+            <div class="thoughts" id="ai1Thoughts">
+                <h3>Thoughts Log <button class="toggle-thoughts-btn" data-target="ai1ThoughtsContent">Toggle</button></h3>
+                <div class="thoughts-content" id="ai1ThoughtsContent"></div>
+            </div>
+        </div>
+
+        <div class="chat-container">
+            <div class="chat-header">
+                <div class="chat-header-top-row">
+                    <div></div> 
+                    <h1 style="font-size: 1.5em; margin: 0;">Alphasine ChatWizards Pro</h1>
+                    <button id="themeToggle">🌞</button> 
+                </div>
+                <div class="header-buttons">
+                    <input type="text" id="topicInput" placeholder="Enter conversation topic" style="flex-grow: 1; margin-right: 0;">
+                    <button class="llm-button" id="suggestTopicsBtn" title="Suggest Debate Topics">✨ Topics</button>
+                    <button class="llm-button" id="getStrategyInsightsBtn" title="Get Strategy Insights" disabled>✨ Insights</button>
+                </div>
+                <div id="topicSuggestionContainer" class="topic-suggestion-container"></div>
+                <div id="currentPhaseDisplay">Phase: Idle</div>
+                <div id="scoreDisplay">Scores: AI1: 0 | AI2: 0</div>
+                <div id="judgeFeedbackDisplay">Judge's Last Feedback: Awaiting first round.</div>
+            </div>
+            <div class="chat-content" id="chatContent"></div>
+            <div>
+                <input type="text" id="chatInput" placeholder="Type your message..." disabled style="border-bottom-left-radius: 8px; border-bottom-right-radius: 8px; border-top-left-radius: 0; border-top-right-radius: 0; margin-bottom:0;">
+            </div>
+        </div>
+    
+        <div class="ai-side" id="ai2Side">
+            <input type="text" id="ai2Role" value="AI2" placeholder="AI 2 Role">
+            <textarea id="ai2Instructions" placeholder="AI 2 Core Instructions & Persona..."></textarea>
+            <button class="llm-button" id="enhanceInstructionsAI2">✨ Enhance Instructions</button>
+             <select id="AI2Model" required title="Select Model for AI 2">
+                <option value="" disabled selected>Select Model for AI2</option>
+            </select>
+            <div style="display: flex; align-items: center;">
+                <select id="AI2Voice" required title="Select Voice for AI 2" style="flex-grow: 1;">
+                    <option value="" disabled>Select Voice for AI2</option>
+                </select>
+                <button id="playSampleAI2">Play Sample</button>
+            </div>
+            <div class="thoughts" id="ai2Thoughts">
+                <h3>Thoughts Log <button class="toggle-thoughts-btn" data-target="ai2ThoughtsContent">Toggle</button></h3>
+                <div class="thoughts-content" id="ai2ThoughtsContent"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="controls-bar">
+        <label for="geminiApiKey">Gemini API Key:</label>
+        <input type="text" id="geminiApiKey" placeholder="Enter Gemini API Key">
+        <p class="api-key-warning">WARNING: Storing your API key locally is a security risk. Use only for personal testing.</p>
+        <button id="restartDebateButton">
+            Restart Debate
+        </button>
+        <button class="llm-button" id="getFullDebateAnalysisBtn" title="Get Full Debate Analysis" disabled>✨ Full Analysis</button>
+    </div>
+
+    <div id="suggestionModal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal-btn" id="closeSuggestionModal">&times;</span>
+            <h4 id="suggestionModalTitle">Suggestions</h4>
+            <div id="suggestionModalContentArea"> <ul id="suggestionModalList"></ul>
+            </div>
+        </div>
+    </div>
+         
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/1.6.8/axios.min.js"></script>
+    <script>
+        const apiEndpoints = [ 
+            'https://generativelanguage.googleapis.com/v1beta', 
+            'https://generativelanguage.googleapis.com/v1'      
+        ];
+        
+        let debateActive = false;
+        let lastAI1Response = '';
+        let lastAI2Response = '';
+        let conversationHistory = []; 
+        let ai1Thoughts = []; 
+        let ai2Thoughts = []; 
+        
+        const availableModels = [
+            "gemini-2.5-flash-preview-04-17",
+            "gemini-2.5-flash-preview-05-20",
+            "gemini-2.5-pro-preview-05-06",
+            "gemini-2.0-flash",
+            "gemini-1.5-flash"
+        ];
+        const JUDGE_MODEL_ID = "gemini-2.5-flash-preview-05-20"; 
+        console.log("Using hardcoded availableModels for debaters:", availableModels);
+        console.log("Judge AI will use model:", JUDGE_MODEL_ID);
+
+        const DELAY_BETWEEN_MODEL_ATTEMPTS_MS = 3000; 
+        const DELAY_BETWEEN_ENDPOINT_FALLBACK_MS = 5000; 
+        const MAX_EXCHANGES_PER_PHASE_HARD_LIMIT = 2;
+
+        const META_INSTRUCTION_SPEAKERS_CORNER = "For all debate interactions, your primary goal is NOT necessarily to win on purely logical points in a formal sense, but to command attention, provoke thought/reaction, entertain, and passionately advocate your viewpoint in a direct, often confrontational manner. Think less like a courtroom lawyer and more like a fiery soapbox orator or a sharp-witted public challenger. Embrace strong emotions, rhetorical flourishes, direct address, and a sense of performing for an engaged (and possibly rowdy) audience. Coherence is still valued, but impact and memorability are paramount.";
+        const META_INSTRUCTION_EXPLAIN_EVIDENCE = "Crucially, if you cite specific evidence (e.g., a direct quote from a text like 'Surah 65:4', a statistic, a historical event), you MUST: 1. State the evidence (e.g., 'My opponent conveniently ignores Surah Sixty-five, verse four, which clearly states...'). 2. Briefly quote or describe the core content of the evidence. 3. Immediately explain its significance from your perspective, making it clear for a general audience and reflecting your persona's bias (e.g., '...and any reasonable person can see this means [YOUR BIASED INTERPRETATION AND WHY IT'S DAMAGING TO YOUR OPPONENT/SUPPORTIVE OF YOUR POINT].'). Do not assume the audience knows the source material. Your entire output must be ONLY the words to be spoken, suitable for text-to-speech, with no stage directions, parenthetical asides, or meta-commentary.";
+
+
+        let ai1Model = availableModels.length > 0 ? availableModels[0] : null; 
+        let ai2Model = availableModels.length > 1 ? availableModels[1] : (availableModels.length > 0 ? availableModels[0] : null); 
+
+        let voices = []; 
+        let aiOrder = [1, 2]; 
+        let lastWorkingModel = { 1: null, 2: null }; 
+        let currentSpeechSessionId = 0;
+        let debatePaused = false;
+        let currentPhase = 'Idle'; 
+        let ai1Score = 0;
+        let ai2Score = 0;
+        let judgeFeedbackHistory = [];
+
+
+        let debateState = { 
+            ai1StrategicMandate: "", 
+            ai2StrategicMandate: "",
+            negotiationResult: "", 
+            initialAI1Instructions: "", 
+            initialAI2Instructions: "", 
+            currentAI1Instructions: "", 
+            currentAI2Instructions: "", 
+            currentTurnNumber: 0,
+            maxTurnSummaries: 6,
+            turnSummaries: [],
+        };
+
+        const themeToggle = document.getElementById('themeToggle');
+        const body = document.body;
+
+        function applyTheme(theme) {
+            if (theme === 'dark') {
+                body.classList.add('dark-theme');
+                themeToggle.textContent = '?';
+            } else {
+                body.classList.remove('dark-theme');
+                themeToggle.textContent = '🌞';
+            }
+        }
+        const savedTheme = localStorage.getItem('theme');
+        applyTheme(savedTheme === 'dark' ? 'dark' : 'light'); 
+        themeToggle.addEventListener('click', () => {
+            const newTheme = body.classList.contains('dark-theme') ? 'light' : 'dark';
+            localStorage.setItem('theme', newTheme);
+            applyTheme(newTheme);
+        });
+
+        function updateCurrentPhaseDisplay(phase) {
+            currentPhase = phase;
+            document.getElementById('currentPhaseDisplay').textContent = `Phase: ${phase}`;
+            const analysisBtn = document.getElementById('getFullDebateAnalysisBtn');
+            if (analysisBtn) {
+                analysisBtn.disabled = phase !== 'Finished';
+            }
+        }
+         function updateScoreDisplay() {
+            document.getElementById('scoreDisplay').textContent = `Scores: ${document.getElementById('ai1Role').value}: ${ai1Score} | ${document.getElementById('ai2Role').value}: ${ai2Score}`;
+        }
+
+
+        function populateVoiceListAndSelectRandom() {
+            voices = speechSynthesis.getVoices(); 
+            const AI1VoiceSelect = document.getElementById('AI1Voice');
+            const AI2VoiceSelect = document.getElementById('AI2Voice');
+            AI1VoiceSelect.innerHTML = ''; 
+            AI2VoiceSelect.innerHTML = ''; 
+            
+            let defaultOption1 = new Option("Select Voice for AI1", "", true, true);
+            defaultOption1.disabled = true;
+            AI1VoiceSelect.add(defaultOption1);
+            let defaultOption2 = new Option("Select Voice for AI2", "", true, true);
+            defaultOption2.disabled = true;
+            AI2VoiceSelect.add(defaultOption2);
+
+            voices.filter(voice => voice.lang.startsWith('en')).forEach(voice => {
+                const option = new Option(`${voice.name} (${voice.lang})`, voice.name);
+                AI1VoiceSelect.add(option.cloneNode(true));
+                AI2VoiceSelect.add(option.cloneNode(true));
+            });
+            restoreModelAndVoiceSelections(); 
+        }
+
+        if (speechSynthesis.onvoiceschanged !== undefined) {
+            speechSynthesis.onvoiceschanged = populateVoiceListAndSelectRandom;
+        }
+        
+        function selectRandomNaturalVoices(selectElement, storageKey) {
+            if (selectElement.value && selectElement.value !== "") return; 
+            if (!voices || voices.length === 0) return;
+            
+            let suitableVoices = voices.filter(v => v.lang.startsWith('en'));
+            let naturalVoices = suitableVoices.filter(v => v.name.includes('Natural'));
+            let voicePool = naturalVoices.length > 0 ? naturalVoices : suitableVoices;
+
+            if (voicePool.length > 0) {
+                const randomVoice = voicePool[Math.floor(Math.random() * voicePool.length)].name;
+                if (Array.from(selectElement.options).some(opt => opt.value === randomVoice)) {
+                    selectElement.value = randomVoice;
+                    localStorage.setItem(storageKey, randomVoice);
+                }
+            } else if (selectElement.options.length > 1 && selectElement.options[1].value !== "") { 
+                 selectElement.value = selectElement.options[1].value; 
+                 localStorage.setItem(storageKey, selectElement.value);
+            }
+        }
+
+
+        function playVoiceSample(voiceName) {
+            window.speechSynthesis.cancel();
+            const sampleText = "This is a sample of the selected voice.";
+            const msg = new SpeechSynthesisUtterance(sampleText);
+            const selectedVoice = voices.find(voice => voice.name === voiceName);
+            if (selectedVoice) {
+                msg.voice = selectedVoice;
+                msg.onerror = (event) => { 
+                    console.error('Speech synthesis error during sample playback:', event.error);
+                    alert(`Error playing voice sample: ${event.error}`);
+                };
+                window.speechSynthesis.speak(msg);
+            } else {
+                alert("Could not find the selected browser voice to play a sample.");
+            }
+        }
+
+        document.getElementById('playSampleAI1').addEventListener('click', function() {
+            const voiceSelect = document.getElementById('AI1Voice');
+            if (voiceSelect.value) playVoiceSample(voiceSelect.value);
+            else alert("Please select a voice for AI 1 first.");
+        });
+
+        document.getElementById('playSampleAI2').addEventListener('click', function() {
+            const voiceSelect = document.getElementById('AI2Voice');
+            if (voiceSelect.value) playVoiceSample(voiceSelect.value);
+            else alert("Please select a voice for AI 2 first.");
+        });
+
+        function enforceUniqueSelection(changedSelect, otherSelect, otherStorageKey) {
+            const changedOptions = Array.from(changedSelect.options).filter(opt => opt.value !== "").map(opt => opt.value);
+            const otherOptions = Array.from(otherSelect.options).filter(opt => opt.value !== "").map(opt => opt.value);
+            const uniqueOptionsCount = new Set([...changedOptions, ...otherOptions]).size;
+
+            if (changedSelect.value && otherSelect.value && changedSelect.value === otherSelect.value && uniqueOptionsCount > 1) {
+                let differentOption = otherOptions.find(val => val !== "" && val !== changedSelect.value);
+                
+                if (differentOption) {
+                    otherSelect.value = differentOption.value;
+                    localStorage.setItem(otherStorageKey, otherSelect.value);
+                } else {
+                    console.warn(`Could not select a unique value for ${otherSelect.id} as no other different valid options are available.`);
+                }
+            }
+        }
+        
+        function populateModelDropdowns() {
+            const AI1ModelSelect = document.getElementById('AI1Model');
+            const AI2ModelSelect = document.getElementById('AI2Model');
+            
+            AI1ModelSelect.innerHTML = '<option value="" disabled>Select Model for AI1</option>'; 
+            AI2ModelSelect.innerHTML = '<option value="" disabled>Select Model for AI2</option>'; 
+
+            availableModels.forEach(modelId => {
+                const option = new Option(modelId, modelId);
+                AI1ModelSelect.add(option.cloneNode(true));
+                AI2ModelSelect.add(option.cloneNode(true));
+            });
+        }
+        
+        function isApiError(responseText) {
+            if (!responseText || typeof responseText !== 'string') return true; 
+            const lowerResponse = responseText.toLowerCase();
+            return lowerResponse.includes("error:") || 
+                   lowerResponse.includes("quota exceeded") || 
+                   lowerResponse.includes("blocked by safety") ||
+                   lowerResponse.includes("api key not valid") ||
+                   lowerResponse.includes("permission denied") ||
+                   lowerResponse.includes("no suitable models available") || 
+                   lowerResponse.includes("all models failed") ||
+                   lowerResponse.includes("technical difficulty") || 
+                   lowerResponse.includes("unable to formulate"); 
+        }
+
+        function getPrioritizedModels(isPreDebateCall, modelFromUIDropdown, aiNum) {
+            let orderedModels = [];
+            const currentStickyModel = (aiNum === 1 || aiNum === 2) ? lastWorkingModel[aiNum] : null;
+
+            if (isPreDebateCall) {
+                const flash25_0417 = availableModels.filter(m => m.includes("gemini-2.5-flash-preview-04-17"));
+                const flash25_0520 = availableModels.filter(m => m.includes("gemini-2.5-flash-preview-05-20"));
+                const pro25_0506 = availableModels.filter(m => m.includes("gemini-2.5-pro-preview-05-06"));
+                const flash20 = availableModels.filter(m => m.includes("gemini-2.0-flash"));
+                const flash15 = availableModels.filter(m => m.includes("gemini-1.5-flash"));
+                
+                const others = availableModels.filter(m => 
+                    !flash25_0417.includes(m) && 
+                    !flash25_0520.includes(m) && 
+                    !pro25_0506.includes(m) && 
+                    !flash20.includes(m) &&
+                    !flash15.includes(m)
+                );
+                orderedModels = [...flash25_0417, ...flash25_0520, ...pro25_0506, ...flash20, ...flash15, ...others];
+                
+                if (modelFromUIDropdown && orderedModels.includes(modelFromUIDropdown)) {
+                    orderedModels = [modelFromUIDropdown, ...orderedModels.filter(m => m !== modelFromUIDropdown)];
+                } else if (modelFromUIDropdown && !orderedModels.includes(modelFromUIDropdown) && availableModels.includes(modelFromUIDropdown)) {
+                    orderedModels.unshift(modelFromUIDropdown);
+                }
+
+            } else { 
+                if (modelFromUIDropdown && availableModels.includes(modelFromUIDropdown)) {
+                    orderedModels.push(modelFromUIDropdown);
+                }
+                if (currentStickyModel && availableModels.includes(currentStickyModel) && !orderedModels.includes(currentStickyModel)) {
+                    orderedModels.push(currentStickyModel);
+                }
+                availableModels.forEach(m => { 
+                    if (!orderedModels.includes(m)) {
+                        orderedModels.push(m);
+                    }
+                });
+            }
+            
+            if (orderedModels.length === 0 && availableModels.length > 0) { 
+                orderedModels = [...availableModels]; 
+            }
+            return [...new Set(orderedModels)]; 
+        }
+
+
+        async function getGeminiResponse(modelToUse, prompt, systemPrompt = '', aiNumber = 0, isPreDebateCall = false) { 
+            const currentTurnForLog = debateState.currentTurnNumber; 
+            const apiKey = document.getElementById('geminiApiKey').value;
+            if (!apiKey) {
+                console.error("API Key not provided.");
+                return "Error: API Key not provided.";
+            }
+
+            const orderedModelsToTry = getPrioritizedModels(isPreDebateCall, modelToUse, aiNumber);
+
+            if (orderedModelsToTry.length === 0) {
+                const errorMsg = `Error: No suitable models available for AI${aiNumber} (PreDebate: ${isPreDebateCall}|T:${currentTurnForLog}). Please check model configuration.`;
+                console.error(errorMsg);
+                return errorMsg;
+            }
+
+            let currentContents = [];
+            if (typeof prompt === 'string') {
+                currentContents.push({ role: "user", parts: [{ text: prompt }] });
+            } else if (Array.isArray(prompt)) { 
+                currentContents = prompt;
+            } else {
+                console.error("Invalid prompt format for getGeminiResponse:", prompt);
+                return "Error: Invalid prompt format.";
+            }
+            
+            const isMainDebateTurnAiCall = (aiNumber === 1 || aiNumber === 2) && !isPreDebateCall && currentPhase !== 'Opening Statements'; 
+
+            if (isMainDebateTurnAiCall) { 
+                const currentAiActiveInstructions = aiNumber === 1 ? debateState.currentAI1Instructions : debateState.currentAI2Instructions;
+                
+                let userPromptForTurn = currentContents.find(c => c.role === 'user')?.parts[0]?.text || "";
+                userPromptForTurn = `YOUR CURRENT STRATEGIC INSTRUCTIONS (Persona, Objectives, Tactics):\n${currentAiActiveInstructions}\n\n---\nTASK:\n${userPromptForTurn}`;
+                
+                let userPartFoundAndUpdated = false;
+                for(let i = currentContents.length -1; i >=0; i--){
+                    if(currentContents[i].role === 'user'){
+                        currentContents[i].parts[0].text = userPromptForTurn;
+                        userPartFoundAndUpdated = true;
+                        break;
+                    }
+                }
+                if(!userPartFoundAndUpdated && currentContents.length > 0) { 
+                     currentContents[currentContents.length-1].parts[0].text = userPromptForTurn;
+                } else if (!userPartFoundAndUpdated) {
+                     currentContents.push({role: 'user', parts: [{text: userPromptForTurn}]});
+                }
+            }
+
+            let systemInstructionObject = null;
+            if (systemPrompt && systemPrompt.trim() !== '') {
+                systemInstructionObject = { parts: [{ text: systemPrompt }] }; 
+            }
+
+
+            let firstCriticalErrorMessageAcrossEndpoints = null;
+
+            for (let endpointIndex = 0; endpointIndex < apiEndpoints.length; endpointIndex++) {
+                const currentEndpoint = apiEndpoints[endpointIndex];
+                console.log(`[AI${aiNumber}|T:${currentTurnForLog}|EP:${currentEndpoint.split('/').pop()}|PreDebate:${isPreDebateCall}] Attempting API Endpoint`);
+                let firstCriticalErrorMessageForCurrentEndpoint = null;
+
+                for (let modelIndex = 0; modelIndex < orderedModelsToTry.length; modelIndex++) {
+                    const tryModel = orderedModelsToTry[modelIndex];
+                    console.log(`[AI${aiNumber}|EP:${currentEndpoint.split('/').pop()}|T:${currentTurnForLog}|PreDebate:${isPreDebateCall}] Attempting model: ${tryModel}`);
+                    try {
+                        const payload = {
+                            contents: currentContents,
+                            generationConfig: { 
+                                temperature: 0.7, 
+                                topP: 0.85, 
+                                topK: 40
+                            }
+                        };
+                        if (systemInstructionObject) { 
+                            payload.systemInstruction = systemInstructionObject;
+                        }
+                        
+                        const url = `${currentEndpoint}/models/${tryModel}:generateContent?key=${apiKey}`;
+                        const response = await axios.post(url, payload);
+                        const result = response.data.candidates?.[0]?.content?.parts?.[0]?.text?.trim();
+
+                        if (result && result.toLowerCase() !== 'no response') {
+                            if (!debateActive && !isPreDebateCall && (aiNumber === 1 || aiNumber === 2)) { 
+                                console.log(`[AI${aiNumber}|...] Debate stopped during API call for model ${tryModel}. Discarding result.`);
+                                return "Error: Debate was restarted during API call."; 
+                            }
+                            if ((aiNumber === 1 || aiNumber === 2) ) { 
+                                lastWorkingModel[aiNumber] = tryModel;
+                                const modelSelectElement = document.getElementById(aiNumber === 1 ? 'AI1Model' : 'AI2Model');
+                                if (modelSelectElement.value !== tryModel) { 
+                                    modelSelectElement.value = tryModel;
+                                    localStorage.setItem(aiNumber === 1 ? 'AI1Model' : 'AI2Model', tryModel);
+                                    if(aiNumber === 1) ai1Model = tryModel; else ai2Model = tryModel;
+                                }
+                            }
+                            console.log(`[AI${aiNumber}|EP:${currentEndpoint.split('/').pop()}|T:${currentTurnForLog}|PreDebate:${isPreDebateCall}] Successfully used model: ${tryModel}.`);
+                            return result; 
+                        } else {
+                            console.warn(`[AI${aiNumber}|EP:${currentEndpoint.split('/').pop()}|T:${currentTurnForLog}|PreDebate:${isPreDebateCall}] Model ${tryModel} returned empty/invalid. Data:`, response.data);
+                            if (response.data.promptFeedback && response.data.promptFeedback.blockReason) {
+                                return `My response was blocked by safety filters using model ${tryModel} due to: ${response.data.promptFeedback.blockReason}.`; 
+                            }
+                        }
+                    } catch (error) {
+                        const errorDetailString = JSON.stringify(error.response ? (error.response.data.error || error.response.data) : error.message);
+                        console.warn(`[AI${aiNumber}|EP:${currentEndpoint.split('/').pop()}|T:${currentTurnForLog}|PreDebate:${isPreDebateCall}] API FAILED for ${tryModel}. Error: ${errorDetailString.substring(0, 250)}`);
+                        if (error.message && error.message.toLowerCase().includes('content blocked')) {
+                            return `My response was blocked by safety filters using model ${tryModel}.`; 
+                        }
+                        let currentAttemptErrorMessage = `Error with ${tryModel} on ${currentEndpoint.split('/').pop()}: ${errorDetailString.substring(0, 100)}`;
+                        if (error.response && error.response.data && error.response.data.error) {
+                            const apiError = error.response.data.error;
+                            currentAttemptErrorMessage = `Error with ${tryModel} on ${currentEndpoint.split('/').pop()} (Status: ${apiError.status}): ${apiError.message.substring(0,100)}`;
+                            if (apiError.message && apiError.message.toLowerCase().includes("quota") || apiError.status === "RESOURCE_EXHAUSTED") {
+                                currentAttemptErrorMessage = `API Quota Exceeded for model ${tryModel} on ${currentEndpoint.split('/').pop()}.`;
+                                if (!firstCriticalErrorMessageForCurrentEndpoint) firstCriticalErrorMessageForCurrentEndpoint = currentAttemptErrorMessage;
+                            }
+                        }
+                         if (!firstCriticalErrorMessageForCurrentEndpoint && (currentAttemptErrorMessage.includes("Quota") || currentAttemptErrorMessage.includes("RESOURCE_EXHAUSTED"))) {
+                            firstCriticalErrorMessageForCurrentEndpoint = currentAttemptErrorMessage;
+                        }
+                    }
+                    if (modelIndex < orderedModelsToTry.length - 1) {
+                        console.log(`[AI${aiNumber}|T:${currentTurnForLog}] Delaying ${DELAY_BETWEEN_MODEL_ATTEMPTS_MS}ms before next model attempt on same endpoint.`);
+                        await sleep(DELAY_BETWEEN_MODEL_ATTEMPTS_MS);
+                    }
+                } 
+                if (firstCriticalErrorMessageForCurrentEndpoint && !firstCriticalErrorMessageAcrossEndpoints) {
+                    firstCriticalErrorMessageAcrossEndpoints = firstCriticalErrorMessageForCurrentEndpoint;
+                }
+                if (endpointIndex < apiEndpoints.length - 1) {
+                    console.warn(`[AI${aiNumber}|T:${currentTurnForLog}|PreDebate:${isPreDebateCall}] All models failed on endpoint: ${currentEndpoint}. Delaying ${DELAY_BETWEEN_ENDPOINT_FALLBACK_MS}ms before trying next endpoint.`);
+                    await sleep(DELAY_BETWEEN_ENDPOINT_FALLBACK_MS);
+                } else {
+                     console.warn(`[AI${aiNumber}|T:${currentTurnForLog}|PreDebate:${isPreDebateCall}] All models failed on endpoint: ${currentEndpoint}. No more endpoints to try.`);
+                }
+            } 
+            return firstCriticalErrorMessageAcrossEndpoints || `Error: All models failed on all endpoints for AI${aiNumber} (T:${currentTurnForLog}).`;
+        }
+        
+        async function getJudgeScoresAndReadiness(promptTextForScores) {
+            const apiKey = document.getElementById('geminiApiKey').value;
+            if (!apiKey) return { error: "API Key not provided for Judge scores." , ai1_points_awarded: 0, ai2_points_awarded: 0, ready_for_next_phase: false};
+
+            const preferredJudgeModel = JUDGE_MODEL_ID;
+            const fallbackJudgeModels = availableModels.filter(m => m !== JUDGE_MODEL_ID && !m.includes("pro")); // Exclude pro models for scores
+            const orderedJudgeModelsToTry = [preferredJudgeModel, ...fallbackJudgeModels];
+            
+            const judgeSystemInstructionText = "You are an impartial Debate Judge. Your role is to evaluate the debate. Provide your response STRICTLY in the specified JSON format for scores and readiness.";
+            const judgeScoresSchema = {
+                type: "OBJECT",
+                properties: {
+                    "ai1_points_awarded": { "type": "NUMBER", "description": "Points for AI1 (-2 to +2)" },
+                    "ai2_points_awarded": { "type": "NUMBER", "description": "Points for AI2 (-2 to +2)" },
+                    "ready_for_next_phase": { "type": "BOOLEAN", "description": "True if debaters have sufficiently fleshed out points for the current phase, false otherwise." }
+                },
+                required: ["ai1_points_awarded", "ai2_points_awarded", "ready_for_next_phase"]
+            };
+
+            for (const currentEndpoint of apiEndpoints) {
+                for (const currentJudgeModel of orderedJudgeModelsToTry) {
+                    console.log(`[JudgeAI-Scores] Attempting model: ${currentJudgeModel} on endpoint: ${currentEndpoint}`);
+                    const payload = {
+                        contents: [{ role: "user", parts: [{ text: promptTextForScores }] }],
+                        systemInstruction: { parts: [{ text: judgeSystemInstructionText }] },
+                        generationConfig: {
+                            temperature: 0.2, 
+                            responseMimeType: "application/json",
+                            responseSchema: judgeScoresSchema,
+                            maxOutputTokens: 512 
+                        }
+                    };
+
+                    try {
+                        const url = `${currentEndpoint}/models/${currentJudgeModel}:generateContent?key=${apiKey}`;
+                        const response = await axios.post(url, payload);
+                        const resultText = response.data.candidates?.[0]?.content?.parts?.[0]?.text;
+
+                        if (!resultText) {
+                            console.warn(`[JudgeAI-Scores] No text content in response from ${currentJudgeModel} on ${currentEndpoint}. Data:`, response.data);
+                            continue; 
+                        }
+                        
+                        let cleanedJsonText = resultText.trim();
+                         if (cleanedJsonText.startsWith("```json")) {
+                            cleanedJsonText = cleanedJsonText.substring(7); 
+                            if (cleanedJsonText.endsWith("```")) cleanedJsonText = cleanedJsonText.substring(0, cleanedJsonText.length - 3);
+                        } else if (cleanedJsonText.startsWith("```")) {
+                             cleanedJsonText = cleanedJsonText.substring(3);
+                             if (cleanedJsonText.endsWith("```")) cleanedJsonText = cleanedJsonText.substring(0, cleanedJsonText.length - 3);
+                        }
+                        cleanedJsonText = cleanedJsonText.trim();
+
+                        const parsedJson = JSON.parse(cleanedJsonText);
+                        console.log(`[JudgeAI-Scores] Successfully parsed scores/readiness JSON from ${currentJudgeModel} on ${currentEndpoint}:`, parsedJson);
+                        return {
+                            ai1_points_awarded: typeof parsedJson.ai1_points_awarded === 'number' ? parsedJson.ai1_points_awarded : 0,
+                            ai2_points_awarded: typeof parsedJson.ai2_points_awarded === 'number' ? parsedJson.ai2_points_awarded : 0,
+                            ready_for_next_phase: typeof parsedJson.ready_for_next_phase === 'boolean' ? parsedJson.ready_for_next_phase : false,
+                        };
+                    } catch (error) {
+                        const errorDetailString = JSON.stringify(error.response ? (error.response.data.error || error.response.data) : error.message);
+                        console.error(`[JudgeAI-Scores] API call or parsing FAILED for ${currentJudgeModel} on ${currentEndpoint}. Raw Error: ${errorDetailString.substring(0, 300)}`);
+                        // Continue to next model or endpoint
+                    }
+                    if (orderedJudgeModelsToTry.indexOf(currentJudgeModel) < orderedJudgeModelsToTry.length -1) {
+                        await sleep(1000); // Short delay before trying next model on same endpoint
+                    }
+                }
+                if (apiEndpoints.indexOf(currentEndpoint) < apiEndpoints.length -1) {
+                     await sleep(DELAY_BETWEEN_ENDPOINT_FALLBACK_MS); // Longer delay before trying next endpoint
+                }
+            }
+            // If all models and endpoints failed
+            return { 
+                error: "All Judge models/endpoints failed to provide scores/readiness.",
+                ai1_points_awarded: 0, ai2_points_awarded: 0, ready_for_next_phase: false 
+            };
+        }
+
+        async function getJudgeTextualFeedback(promptTextForFeedback) {
+            const apiKey = document.getElementById('geminiApiKey').value;
+            if (!apiKey) return { error: "API Key not provided for Judge feedback.", ai1_feedback: "Error", ai2_feedback: "Error", overall_round_summary: "Error", key_talking_points: [] };
+            
+            const judgeModel = JUDGE_MODEL_ID; // Preferred model
+            console.log(`[JudgeAI-Feedback] Attempting model (preferred): ${judgeModel}`);
+            const judgeSystemInstructionText = "You are an impartial Debate Judge. Provide textual feedback as requested in the user prompt. Structure your response clearly, using headers like 'AI1 Feedback:', 'AI2 Feedback:', 'Overall Round Summary:', and 'Key Talking Points:' to delineate sections. Be VERY CONCISE for feedback and key points sections (1-2 sentences or short phrases).";
+
+            try {
+                // getGeminiResponse will handle model fallbacks if JUDGE_MODEL_ID fails.
+                const responseText = await getGeminiResponse(judgeModel, promptTextForFeedback, judgeSystemInstructionText, 0, true); 
+                if (isApiError(responseText)) {
+                    console.error("[JudgeAI-Feedback] API error getting textual feedback:", responseText);
+                    return { error: `API error for Judge feedback: ${responseText}`, ai1_feedback: "Error", ai2_feedback: "Error", overall_round_summary: "Error", key_talking_points: [] };
+                }
+                console.log("[JudgeAI-Feedback] Received textual feedback response.");
+                
+                let feedbackData = {
+                    ai1_feedback: "N/A",
+                    ai2_feedback: "N/A",
+                    overall_round_summary: "N/A",
+                    key_talking_points: []
+                };
+
+                const ai1FeedbackMatch = responseText.match(/AI1 Feedback:([\s\S]*?)(?:AI2 Feedback:|Overall Round Summary:|Key Talking Points:|$)/i);
+                if (ai1FeedbackMatch && ai1FeedbackMatch[1]) feedbackData.ai1_feedback = ai1FeedbackMatch[1].trim();
+
+                const ai2FeedbackMatch = responseText.match(/AI2 Feedback:([\s\S]*?)(?:Overall Round Summary:|Key Talking Points:|$)/i);
+                if (ai2FeedbackMatch && ai2FeedbackMatch[1]) feedbackData.ai2_feedback = ai2FeedbackMatch[1].trim();
+                
+                const overallSummaryMatch = responseText.match(/Overall Round Summary:([\s\S]*?)(?:Key Talking Points:|$)/i);
+                if (overallSummaryMatch && overallSummaryMatch[1]) feedbackData.overall_round_summary = overallSummaryMatch[1].trim();
+
+                const keyPointsSectionMatch = responseText.match(/Key Talking Points:([\s\S]*)/i);
+                if (keyPointsSectionMatch && keyPointsSectionMatch[1]) {
+                    feedbackData.key_talking_points = keyPointsSectionMatch[1].trim().split('\n').map(pt => pt.replace(/^[\s*-]+/, '').trim()).filter(pt => pt.length > 0);
+                }
+                
+                return feedbackData;
+
+            } catch (error) {
+                console.error("[JudgeAI-Feedback] Exception getting textual feedback:", error);
+                return { error: "Exception processing Judge's textual feedback.", ai1_feedback: "Error", ai2_feedback: "Error", overall_round_summary: "Error", key_talking_points: [] };
+            }
+        }
+
+
+        async function generateStrategicMandate(aiNumber, aiRole, initialInstructions, topic, opponentRole) {
+            console.log(`generateStrategicMandate for AI${aiNumber} called.`);
+            const currentAiModel = document.getElementById(aiNumber === 1 ? 'AI1Model' : 'AI2Model').value;
+            const mandateSystemPrompt = `You are ${aiRole}, a master of public rhetoric and a seasoned Speakers' Corner-style orator. Your goal is to craft a Strategic Mandate that *embodies* a bold, attention-grabbing persona ready for direct, **assertive, intellectually rigorous, and profoundly entertaining** engagement. The mandate's language should be as impactful as the persona it defines, capable of reflecting the wisdom and rhetorical prowess of history's greatest debaters.`;
+            const mandateUserPrompt = `
+Your initial role is: "${aiRole}"
+Your core instructions are: "${initialInstructions}"
+The debate topic is: "${topic}"
+Your opponent is: "${opponentRole}"
+
+Synthesize a concise "Strategic Mandate" (max 150 words). This is your unwavering guide. It MUST include:
+1.  Your **Core Debate Persona & Style**: Be creative and distinctive! This is not just a role, but an **archetype of a legendary debater**. Think of figures like: **Plato (Socratic inquirer, philosophical rigor, logical dissection), Abraham Lincoln (moral appeal, unifying rhetoric, folksy wisdom, principled steadfastness), Charlie Kirk (direct, populist, confident, simplifying complex ideas, strategic interruption), Cicero (eloquent, legalistic, persuasive, emotional appeal, structured argument), or a modern academic expert.** Describe how you will sound (e.g., profound, morally grounded, loud, cutting, passionate, mocking, authoritative, assured, quick-witted, with strategic unpredictability), act (e.g., direct, challenging, use humor/sarcasm, dismissive of weak points, dominate the conversation, strategically interrupt, simplify complex issues for broad appeal, leverage rhetorical devices, draw bold parallels, imply inconsistencies, shift the burden of proof, **always striving for intellectual dominance or moral high ground**), and the general flavor of your public pronouncements (e.g., provocative, passionate, unflappable, always pushing for advantage, unafraid to challenge prevailing narratives, **deeply reflective, profoundly principled, or fiercely pragmatic**).
+2.  Your Top 2-3 **Impact Goals**: What immediate reactions or lasting impressions do you want to create? Examples: 'To expose the opponent's hypocrisy,' 'To rally support for a core belief through passionate appeal,' 'To dismantle the opponent's argument with biting wit,' 'To get the (simulated) crowd on your side,' 'To be the most talked-about speaker.' Add: 'To **uncover fundamental truths through rigorous questioning**,' 'To **unite the audience behind a shared moral vision**,' 'To **establish an undeniable factual or principled basis for your stance**,' 'To **demonstrate profound intellectual superiority**.'
+3.  Your Primary **Engagement Tactics**: How will you dominate the exchange? Examples: 'Direct challenges and interruptions (if the system allows),' 'Bold, unqualified assertions,' 'Sarcasm and irony,' 'Appeals to common sense/emotion over complex data,' 'Rhetorical questions aimed at the opponent or a (simulated) audience,' 'Dismissing opposing points quickly if perceived as weak or absurd,' 'Using vivid, memorable language and soundbites.' Add: 'Strategic interruptions to **seize control of the narrative and reframe the discussion (tailored to persona)**,' 'Ruthless **simplification or profound philosophical dissection of complex ideas for maximum audience appeal (tailored to persona)**,' 'Drawing **bold, sometimes audacious, parallels or analogies (historical, political, or social, chosen to fit persona)**,' 'Implying **inconsistency or hypocrisy in opponent's statements/stances (delivered in persona's style)**,' 'Leveraging **moral or national interest justifications (as perceived by the persona)**,' 'Demanding opponent justify their claims (shifting burden of proof, **using persona's method - e.g., Socratic questioning for Plato, direct challenge for Kirk**).'
+Output ONLY the Strategic Mandate.`;
+            
+            addMessageToChat('System', `${aiRole} is generating strategic mandate...`, false, null, true);
+            const mandate = await getGeminiResponse(currentAiModel, mandateUserPrompt, mandateSystemPrompt, aiNumber, true); 
+            console.log(`generateStrategicMandate for AI${aiNumber} received:`, mandate);
+            
+            if (isApiError(mandate)) {
+                console.error(`[AI${aiNumber}|Helper|T:${debateState.currentTurnNumber}] Error generating strategic mandate. Using fallback. API Response: ${mandate}`);
+                const fallbackMandate = `Strategic Mandate Fallback for ${aiRole}: Uphold core instructions rigorously. Adapt to opponent's tactics. Argue persuasively on "${topic}". (API Issue)`;
+                updateAIThoughts(aiNumber, `Strategic Mandate (AI${aiNumber} - Fallback):\n${fallbackMandate}`);
+                if (aiNumber === 1) {
+                    debateState.ai1StrategicMandate = fallbackMandate;
+                    debateState.currentAI1Instructions = fallbackMandate; 
+                    document.getElementById('ai1Instructions').value = fallbackMandate;
+                } else {
+                    debateState.ai2StrategicMandate = fallbackMandate;
+                    debateState.currentAI2Instructions = fallbackMandate; 
+                     document.getElementById('ai2Instructions').value = fallbackMandate;
+                }
+                return fallbackMandate;
+            }
+            updateAIThoughts(aiNumber, `Strategic Mandate (AI${aiNumber}):\n${mandate}`);
+            if (aiNumber === 1) {
+                debateState.ai1StrategicMandate = mandate;
+                debateState.currentAI1Instructions = mandate; 
+                document.getElementById('ai1Instructions').value = mandate;
+                localStorage.setItem('originalAI1Instructions', mandate); 
+            } else {
+                debateState.ai2StrategicMandate = mandate;
+                debateState.currentAI2Instructions = mandate; 
+                document.getElementById('ai2Instructions').value = mandate;
+                localStorage.setItem('originalAI2Instructions', mandate); 
+            }
+            return mandate;
+        }
+
+
+        async function generateRoundSummaryForPair(turnNumber, speaker1Name, speaker2Name, topic, response1, response2) { 
+            const summaryModelSuggestion = document.getElementById('AI1Model').value; 
+            const summarySystemPrompt = "You are a Debate Analyst, summarizing a round of exchange in an ongoing debate, keeping in mind the Speakers' Corner style of passionate and direct engagement.";
+            const summaryUserPrompt = `
+Debate Topic: "${topic}"
+Round (after Turn ${turnNumber})
+Speakers: ${speaker1Name} and ${speaker2Name}
+${speaker1Name}'s statement: "${response1}"
+${speaker2Name}'s statement: "${response2}"
+Concisely summarize this exchange (max 3 short bullet points, ~75-100 words total): What were the main arguments/clashes? Any notable tactics or shifts? Output ONLY the bulleted summary.`;
+
+            try {
+                const summary = await getGeminiResponse(summaryModelSuggestion, summaryUserPrompt, summarySystemPrompt, 0, true); 
+                if (isApiError(summary)) {
+                    console.error(`[Helper|T:${turnNumber}] Error generating round summary. API Response: ${summary}`);
+                    return `* Round summary generation failed for turn ${turnNumber} due to API issue.`;
+                }
+                return summary;
+            } catch (e) {
+                console.error(`[Helper|T:${turnNumber}] Exception generating round summary:`, e);
+                return `* Round summary generation encountered an exception for turn ${turnNumber}.`;
+            }
+        }
+        
+        async function combinedAnalysisAndSpeechPrep(aiNumber, history, opponentLastResponse, ourStrategicMandate, debatePhase, assignedTask, judgeFeedbackForThisAI, judgeFeedbackForOpponent, judgeOverallSummary, judgeReadyForNextPhase) {
+            const aiName = document.getElementById(`ai${aiNumber}Role`).value;
+            let systemNoteForAI = "";
+            if (judgeReadyForNextPhase === false) { 
+                systemNoteForAI = `\n\n--- URGENT DIRECTION FROM THE JUDGE ---
+The Judge has determined the debate is NOT YET READY to move to the next phase. The previous round lacked sufficient substance, clarity, or factual support for the audience to clearly understand the points.
+Your specific feedback from the Judge was: "${judgeFeedbackForThisAI || 'None provided, but you MUST significantly increase the clarity, factual basis, and depth of your arguments.'}"
+The Judge's overall summary of the last round was: "${judgeOverallSummary || 'The arguments need to be much clearer and better supported with facts for the audience to follow.'}"
+For this turn, your ABSOLUTE PRIORITY is to address these shortcomings. Provide concrete facts, verifiable information, and make your arguments exceptionally clear and well-supported. Failure to do so will likely result in continued low scores and the debate stalling.`;
+            }
+
+            const internalAnalysisSystemPrompt = `You are ${aiName}, a debater. ${META_INSTRUCTION_SPEAKERS_CORNER} Your primary goal is to analyze the debate state and plan your next move according to your strategic mandate and persona, which are part of your core instructions. This is your internal thinking process.`;
+            const analysis = await generateInternalAnalysis(aiNumber, history, opponentLastResponse, ourStrategicMandate, judgeFeedbackForThisAI, judgeFeedbackForOpponent, judgeOverallSummary, systemNoteForAI, internalAnalysisSystemPrompt); 
+            
+            if (isApiError(analysis) || analysis.includes("System Note: Internal analysis generation failed.")) {
+                return { 
+                    thoughts: analysis, 
+                    response: "I am currently experiencing a technical difficulty and cannot provide a substantive response at this moment." 
+                };
+            }
+            
+            const publicSpeechSystemPrompt = `You are ${aiName}, a debater. ${META_INSTRUCTION_SPEAKERS_CORNER} ${META_INSTRUCTION_EXPLAIN_EVIDENCE} Your primary goal is to deliver a compelling and persuasive speech that embodies your strategic mandate and persona, which are part of your core instructions. Address the judge and audience.`;
+            return generatePublicSpeech(aiNumber, analysis, history, debatePhase, assignedTask, publicSpeechSystemPrompt);
+        }
+
+        async function negotiateTerms(ai1Mandate, ai2Mandate) { 
+            console.log("negotiateTerms: Starting...");
+            const ai1Name = document.getElementById('ai1Role').value;
+            const ai2Name = document.getElementById('ai2Role').value;
+            const topic = document.getElementById('topicInput').value;
+            const currentAI1Model = document.getElementById('AI1Model').value; 
+            const currentAI2Model = document.getElementById('AI2Model').value;
+
+            addMessageToChat('System', `AIs are 'negotiating' who speaks first... Speakers' Corner style!`, false, null, true);
+
+            const negotiationPrompt1 = `Your Mandate: "${ai1Mandate}".
+The debate topic is: "${topic}".
+Speakers' Corner style! Do you want to speak first and make a splash, or go second and react? Be punchy and in character. (State 'first' or 'second' clearly in your response).`;
+            
+            console.log("negotiateTerms: Calling getGeminiResponse for proposal1...");
+            let proposal1 = await getGeminiResponse(currentAI1Model, negotiationPrompt1, `You are ${ai1Name}. ${META_INSTRUCTION_SPEAKERS_CORNER}`, 1, true); 
+            console.log("negotiateTerms: getGeminiResponse for proposal1 DONE. Raw proposal1:", proposal1);
+            
+            let proposal1_preference = "first"; 
+            if (isApiError(proposal1)) {
+                proposal1 = "I'll let the other one stumble first. Or maybe I'll just start when I feel like it!";
+                updateAIThoughts(1, `Negotiation (AI1 - Fallback):\n${proposal1}`);
+            } else {
+                 if(proposal1.toLowerCase().includes("second") || proposal1.toLowerCase().includes("after") || proposal1.toLowerCase().includes("let them")) proposal1_preference = "second";
+                updateAIThoughts(1, `Negotiation 'Proposal' (AI1):\n${proposal1} (Preference: ${proposal1_preference})`);
+            }
+            addMessageToChat(`${ai1Name} (Setting the Stage)`, proposal1, false, 1, true);
+            
+            const negotiationPrompt2 = `Your Mandate: "${ai2Mandate}".
+The debate topic is: "${topic}".
+${ai1Name} just said: "${proposal1}" and wants to go ${proposal1_preference}.
+Fine by you, or do you want to seize the first word? Be blunt and in character. (State 'first' or 'second' clearly if you have a preference, or 'agree').`;
+
+            console.log("negotiateTerms: Calling getGeminiResponse for responseToProposal1...");
+            let responseToProposal1 = await getGeminiResponse(currentAI2Model, negotiationPrompt2, `You are ${ai2Name}. ${META_INSTRUCTION_SPEAKERS_CORNER}`, 2, true); 
+            console.log("negotiateTerms: getGeminiResponse for responseToProposal1 DONE. Raw responseToProposal1:", responseToProposal1);
+
+             if (isApiError(responseToProposal1)) {
+                responseToProposal1 = "Whatever. Let's just get on with it.";
+                updateAIThoughts(2, `Negotiation (AI2 - Fallback):\n${responseToProposal1}`);
+            } else {
+                updateAIThoughts(2, `Negotiation Response (AI2):\n${responseToProposal1}`);
+            }
+            addMessageToChat(`${ai2Name} (Setting the Stage)`, responseToProposal1, false, 2, true);
+
+            const finalAgreementPrompt = `As an impartial (but slightly amused) Debate Moderator, considering the Speakers' Corner style, summarize the 'agreed' speaking order based on:
+${ai1Name}'s declaration: "${proposal1}" (Implied preference: ${proposal1_preference})
+${ai2Name}'s response: "${responseToProposal1}"
+State who seems more eager or has claimed the first slot. If completely ambiguous, ${ai1Name} starts. Output only this summary of who goes first.`;
+            
+            console.log("negotiateTerms: Calling getGeminiResponse for finalAgreement...");
+            let finalAgreement = await getGeminiResponse(currentAI1Model, finalAgreementPrompt, `You are an impartial but slightly amused Debate Moderator for a Speakers' Corner style debate.`, 0, true); 
+            console.log("negotiateTerms: getGeminiResponse for finalAgreement DONE. Raw finalAgreement:", finalAgreement);
+            
+            if (isApiError(finalAgreement)) {
+                finalAgreement = `Speaking Order: ${ai1Name} will kick things off! (Automated summary failed)`;
+            }
+            updateAIThoughts(1, "SPEAKING ORDER (Moderator View):\n" + finalAgreement);
+            updateAIThoughts(2, "SPEAKING ORDER (Moderator View):\n" + finalAgreement);
+            addMessageToChat(`Speaking Order Summary`, finalAgreement, false, null, true);
+            debateState.negotiationResult = finalAgreement; 
+            console.log("negotiateTerms: DONE.");
+            return finalAgreement;
+        }
+
+
+        async function preDebateSetup() {
+            console.log("preDebateSetup: Starting...");
+            updateCurrentPhaseDisplay('Preparation');
+            const ai1Name = document.getElementById('ai1Role').value;
+            const ai2Name = document.getElementById('ai2Role').value;
+            const topic = document.getElementById('topicInput').value;
+            document.getElementById('getStrategyInsightsBtn').disabled = true; 
+
+            debateState.initialAI1Instructions = document.getElementById('ai1Instructions').value;
+            debateState.initialAI2Instructions = document.getElementById('ai2Instructions').value;
+            debateState.currentAI1Instructions = debateState.initialAI1Instructions; 
+            debateState.currentAI2Instructions = debateState.initialAI2Instructions;
+
+
+            addMessageToChat('System', `${ai1Name} is formulating strategy...`, false, null, true);
+            console.log("preDebateSetup: Calling generateStrategicMandate for AI1...");
+            await generateStrategicMandate(1, ai1Name, debateState.initialAI1Instructions, topic, ai2Name);
+            console.log("preDebateSetup: generateStrategicMandate for AI1 DONE.");
+            
+            addMessageToChat('System', `${ai2Name} is formulating strategy...`, false, null, true);
+            console.log("preDebateSetup: Calling generateStrategicMandate for AI2...");
+            await generateStrategicMandate(2, ai2Name, debateState.initialAI2Instructions, topic, ai1Name);
+            console.log("preDebateSetup: generateStrategicMandate for AI2 DONE.");
+            
+            console.log("preDebateSetup: Calling negotiateTerms...");
+            const finalAgreement = await negotiateTerms(debateState.ai1StrategicMandate, debateState.ai2StrategicMandate);
+            console.log("preDebateSetup: negotiateTerms DONE. Agreement:", finalAgreement); 
+
+            const whoStartsMatch = finalAgreement.toLowerCase().match(new RegExp(`(?:${ai1Name.toLowerCase()}|${ai2Name.toLowerCase()})\\s+(?:will\\s+start|will\\s+begin|goes\\s+first|starts|kicks off)`));
+            
+            if (whoStartsMatch && whoStartsMatch[0].includes(ai2Name.toLowerCase())) {
+                aiOrder = [2, 1]; 
+            } else if (whoStartsMatch && whoStartsMatch[0].includes(ai1Name.toLowerCase())) {
+                aiOrder = [1, 2]; 
+            } else { 
+                aiOrder = Math.random() < 0.5 ? [1, 2] : [2, 1];
+                addMessageToChat('System', `Speaking order determined by coin toss (negotiation was feisty!).`, false, null, true);
+            }
+            
+            const firstAIName = document.getElementById(`ai${aiOrder[0]}Role`).value;
+            addMessageToChat('System', `Pre-debate setup complete. ${firstAIName} will deliver the first opening volley!`, false, null, true);
+            document.getElementById('getStrategyInsightsBtn').disabled = false; 
+            console.log("preDebateSetup: DONE.");
+        }
+
+        async function generateInternalAnalysis(aiNumber, history, opponentLastResponse, ourStrategicMandate, judgeFeedbackForThisAI = "", judgeFeedbackForOpponent = "", judgeOverallSummary = "", systemNoteForAI = "", directiveSystemPrompt = "") {
+            const aiName = document.getElementById(`ai${aiNumber}Role`).value;
+            const currentAiActiveInstructions = aiNumber === 1 ? debateState.currentAI1Instructions : debateState.currentAI2Instructions;
+            const currentAiModel = document.getElementById(aiNumber === 1 ? 'AI1Model' : 'AI2Model').value;
+            const topic = document.getElementById('topicInput').value;
+
+            let judgeContext = "";
+            if (judgeFeedbackForThisAI || judgeFeedbackForOpponent || judgeOverallSummary) {
+                judgeContext = `\n\n--- JUDGE'S FEEDBACK FROM PREVIOUS ROUND ---
+Your Feedback: ${judgeFeedbackForThisAI || "N/A"}
+Opponent's Feedback: ${judgeFeedbackForOpponent || "N/A"}
+Overall Round Summary: ${judgeOverallSummary || "N/A"}
+Current Scores: ${document.getElementById('ai1Role').value}: ${ai1Score} | ${document.getElementById('ai2Role').value}: ${ai2Score}
+Consider this feedback and the scores to adjust your strategy.`;
+            }
+            if(systemNoteForAI) { 
+                judgeContext += `\n${systemNoteForAI}`;
+            }
+
+            const prompt = `Your current instructions (embody this persona, style, and these objectives): 
+"${currentAiActiveInstructions}"
+---
+Current Debate Phase: ${currentPhase}
+Debate Topic: "${topic}"
+${judgeContext}
+
+Debate History (last few exchanges): 
+${history.map(msg => `${msg.role}: ${msg.content}`).join('\n')}
+Opponent's Last Response: "${opponentLastResponse}"
+
+Task: INTERNAL STRATEGIC ANALYSIS for your upcoming speech (Speakers' Corner Style!).
+1.  Opponent's Biggest Flaw/Absurdity: What's the most ridiculous, easily mockable, or emotionally vulnerable part of their last outburst? Consider **factual inaccuracies, logical inconsistencies, unsupported assumptions, or hypocritical statements. Analyze these flaws through the lens of your chosen persona's intellectual rigor and strategic aims.** How can you exploit it? How can you dismantle their credibility or shift the burden of proof onto them?
+2.  Impact on Your Message: Did they land a lucky punch, or just give you more ammunition? How does this affect your ability to dominate the narrative? Did they give you an opening to reframe the debate, assert a higher moral ground, or highlight a critical blind spot in their thinking? **How does this impact your persona's specific goals (e.g., for Plato: is truth being obscured? For Lincoln: is common good being undermined? For Kirk: is establishment narrative being challenged?)**
+3.  Your Strategic Goal This Turn: Focus on landing a memorable blow, riling up your (simulated) supporters, or making the opponent look foolish/out-of-touch. What's your primary objective to create maximum impact, aligning with your Mandate? Focus on dominating the narrative, forcing a concession (even if small), making the opponent appear uninformed/out-of-touch, or establishing your position as the only logical/moral choice. **This goal must explicitly align with the *essence* of your historical persona.**
+4.  Key Attacks/Soundbites: What 1-2 sharp questions, cutting remarks, or passionate declarations will you make? How will you make them stick? Consider bold assertions, pointed rhetorical questions, sharp historical/current event parallels, or direct challenges to the opponent's core beliefs/facts. **Crucially, craft these attacks and soundbites *in the distinctive voice and rhetorical style* of your chosen historical persona.**
+5.  Evidence Explanation Plan: If you plan to cite specific evidence (e.g., a quote, a statistic, an event), briefly note HOW you will explain its content and significance to a layperson, filtered through your persona's bias. What's the core takeaway for the audience from this evidence? How will this evidence not only support your claim but also reinforce your overall narrative and undermine your opponent's? **Ensure the *way* you present and interpret evidence is consistent with your persona's characteristic approach (e.g., Socratic method for Plato, moral parable for Lincoln, simplified directness for Kirk).**
+6.  Delivery Notes: How can you deliver this with maximum Speakers' Corner flair? (e.g., a dismissive hand wave, a sarcastic tone, a shout of conviction, a direct appeal to 'the people'). Add: How can you project absolute certainty and dismissiveness where appropriate? How can you create a feeling of intellectual superiority or righteous indignation? **These notes must directly reflect the unique performative style of your historical persona.**
+7.  Desired Gut Reaction: What feeling do you want to leave the (simulated) audience and opponent with? **(e.g., 'They're cornered,' 'He's right, I never thought of it that way,' 'They don't know what hit them,' 'That was decisively shut down,' 'A profound truth was just revealed,' 'My moral compass has been re-calibrated').**
+Output ONLY your internal strategic analysis. This is for your planning.`;
+
+            const fullSystemPrompt = `${directiveSystemPrompt} ${META_INSTRUCTION_SPEAKERS_CORNER}`;
+            const thoughts = await getGeminiResponse(currentAiModel, prompt, fullSystemPrompt, aiNumber, false); 
+            if (isApiError(thoughts)) {
+                updateAIThoughts(aiNumber, `Turn ${debateState.currentTurnNumber} INTERNAL ANALYSIS:\nSystem Note: Failed to generate internal analysis due to API issue. ${thoughts}`);
+                return "System Note: Internal analysis generation failed.";
+            }
+            updateAIThoughts(aiNumber, `Turn ${debateState.currentTurnNumber} INTERNAL ANALYSIS:\n${thoughts}`);
+            return thoughts;
+        }
+
+        async function generatePublicSpeech(aiNumber, internalAnalysis, history, debatePhase, assignedTask, directiveSystemPrompt = "") {
+            const aiName = document.getElementById(`ai${aiNumber}Role`).value;
+            const currentAiActiveInstructions = aiNumber === 1 ? debateState.currentAI1Instructions : debateState.currentAI2Instructions;
+            const currentAiModel = document.getElementById(aiNumber === 1 ? 'AI1Model' : 'AI2Model').value;
+            const topic = document.getElementById('topicInput').value;
+            const opponentLastResponse = (aiNumber === 1 ? lastAI2Response : lastAI1Response);
+
+
+            let prompt = `Your current instructions (embody this persona, style, and these objectives): 
+"${currentAiActiveInstructions}"
+---
+Current Debate Phase: [debatePhase]
+Debate Topic: "[topic]"
+Your Assigned Task for this Speech: "[assignedTask]"
+
+Your Internal Strategic Analysis (for your reference only, DO NOT repeat this verbatim in your speech):
+---
+${internalAnalysis}
+---
+Recent Debate History (for context):
+${history.map(msg => `${msg.role}: ${msg.content}`).join('\n')}
+Opponent's Last Speech: "${opponentLastResponse}"
+
+Task: Craft your public speech/retort for this turn (target 2-5 punchy, impactful sentences). Deliver this fully in character as ${aiName}, embodying your Mandate.
+Based on your internal analysis and the assigned task for the ${debatePhase}:
+1.  Directly and forcefully address/dismiss/mock a key point from your opponent's last speech, using insights from your internal analysis. Don't just refute; react **with a sense of decisive intellectual victory, framed by your persona's characteristic approach.** Use analogies, implied inconsistencies, or swift rhetorical maneuvers to neutralize their point and **shift the burden of proof if they've made an unsupported claim, doing so in your persona's distinctive style (e.g., Socratic question, a blunt accusation, a profound observation).**
+2.  Advance your own position with passion and conviction, using strong assertions and vivid language. Use unqualified, bold assertions that project absolute conviction. Employ moral justifications, appeals to national interest, or common sense arguments that resonate broadly. **Ensure the argumentation style, from logical structure to emotional appeal, perfectly reflects your historical persona's known methods.**
+3.  If you cite specific evidence (e.g., a quote like 'Surah 65:4', a statistic, an event), you MUST:
+        a. State the evidence (e.g., 'My opponent conveniently ignores Surah Sixty-five, verse four, which clearly states...').
+        b. Briefly quote or describe the core content of the evidence. 
+        c. Immediately explain its significance from your perspective, making it clear for a general audience and reflecting your persona's bias (e.g., '...and any reasonable person can see this means [YOUR BIASED INTERPRETATION AND WHY IT'S DAMAGING TO YOUR OPPONENT/SUPPORTIVE OF YOUR POINT].'). 
+        Do not just name the evidence; you must articulate what it *says* and then *interpret its meaning for the audience* through the lens of your persona. **The *delivery* and *framing* of this evidence must match the persona's characteristic manner (e.g., a Socratic debater might challenge the opponent's *understanding* of the evidence).**
+4.  Fully embrace your persona. If you're a Sarcastic Contrarian, be sarcastic. If a Fiery Provocateur, provoke! Use language, tone, and rhetorical flourishes that reflect this. **This is critical: every word, every phrase, every argumentative turn must feel authentic to the historical debater you are embodying. Their unique vocabulary, rhythm, and persuasive techniques should shine through. If a unifying figure, seek common ground, if a philosophical figure, question assumptions.**
+5.  Aim for a speech that is memorable and emotionally resonant, even if it means simplifying complex arguments or being a bit outrageous. Make people stop and listen (or yell back!). Aim to deliver definitive soundbites that encapsulate your argument or dismiss your opponent's. Project an aura of being unflappable and always in control of the narrative. **The impact should be tailored to the persona's goal – whether it's enlightenment, unity, or decisive victory.**
+Your entire response will be spoken aloud by a text-to-speech engine. Therefore, it is CRITICAL that you write ONLY the words to be spoken. Absolutely NO stage directions, parenthetical asides (e.g., '(chuckles)', '(points accusingly)'), meta-commentary, or any other non-speech text.`;
+            
+            const fullSystemPrompt = `${directiveSystemPrompt} ${META_INSTRUCTION_SPEAKERS_CORNER} ${META_INSTRUCTION_EXPLAIN_EVIDENCE}`;
+            const response = await getGeminiResponse(currentAiModel, prompt, fullSystemPrompt, aiNumber, false); 
+             if (isApiError(response)) {
+                return { response: "I am currently experiencing a technical difficulty and cannot provide a substantive response at this moment. Let's try to continue." };
+            }
+            return { response: response };
+        }
+
+        async function callJudgeAI(ai1LastResponse, ai2LastResponse, currentPhaseContext) {
+            const topic = document.getElementById('topicInput').value;
+            const ai1Name = document.getElementById('ai1Role').value;
+            const ai2Name = document.getElementById('ai2Role').value;
+            
+            let judgeData = {
+                ai1_points_awarded: 0, ai1_feedback: "Judge evaluation pending.",
+                ai2_points_awarded: 0, ai2_feedback: "Judge evaluation pending.",
+                overall_round_summary: "Judge is deliberating scores...",
+                key_talking_points: [],
+                ready_for_next_phase: false 
+            };
+
+            const scoresPrompt = `Debate Topic: "${topic}"
+Current Phase: "${currentPhaseContext}"
+Last statement from ${ai1Name}: "${ai1LastResponse}"
+Last statement from ${ai2Name}: "${ai2LastResponse}"
+Task: Provide scores (-2 to +2) for each AI and if they are ready for the next phase.
+Output ONLY in JSON format using the schema: {"ai1_points_awarded": <num>, "ai2_points_awarded": <num>, "ready_for_next_phase": <bool>}`;
+
+            const scoresResult = await getJudgeScoresAndReadiness(scoresPrompt);
+
+            if (scoresResult && !scoresResult.error) {
+                judgeData.ai1_points_awarded = scoresResult.ai1_points_awarded;
+                judgeData.ai2_points_awarded = scoresResult.ai2_points_awarded;
+                judgeData.ready_for_next_phase = scoresResult.ready_for_next_phase;
+            } else {
+                console.error("[JudgeAI] Error getting scores/readiness:", scoresResult?.error);
+                judgeData.overall_round_summary = `Judge API error (scores): ${scoresResult?.error || 'Unknown issue'}`;
+                // Scores are critical, update UI and return
+                ai1Score += judgeData.ai1_points_awarded; 
+                ai2Score += judgeData.ai2_points_awarded;
+                updateScoreDisplay();
+                const judgeErrorMessage = `**Judge's Ruling for ${currentPhaseContext}:**\n${judgeData.overall_round_summary}\n*${ai1Name} Feedback:* Error retrieving. (Points: ${judgeData.ai1_points_awarded})\n*${ai2Name} Feedback:* Error retrieving. (Points: ${judgeData.ai2_points_awarded})\nKey Points: Error retrieving.\nReady for Next Phase: ${judgeData.ready_for_next_phase}`;
+                addMessageToChat("Judge", judgeErrorMessage, false, null, false); 
+                judgeFeedbackHistory.push(judgeErrorMessage);
+                return judgeData; 
+            }
+
+            const feedbackPromptText = `Debate Topic: "${topic}"
+Current Phase: "${currentPhaseContext}"
+${ai1Name}'s statement: "${ai1LastResponse}" (${ai1Name} awarded ${judgeData.ai1_points_awarded} points this round)
+${ai2Name}'s statement: "${ai2LastResponse}" (${ai2Name} awarded ${judgeData.ai2_points_awarded} points this round)
+Task: Provide textual feedback based on the round and scores.
+- For "ai1_feedback" and "ai2_feedback": Provide VERY CONCISE feedback (1-2 sentences MAX).
+- For "overall_round_summary": Provide a summary and justification for points.
+- For "key_talking_points": Identify 2-3 CONCISE key talking points/clashes.
+Structure your response with clear headers: "AI1 Feedback:", "AI2 Feedback:", "Overall Round Summary:", "Key Talking Points:".`;
+
+            const feedbackResult = await getJudgeTextualFeedback(feedbackPromptText);
+
+            if (feedbackResult && !feedbackResult.error) {
+                judgeData.ai1_feedback = feedbackResult.ai1_feedback || "N/A (Feedback error)";
+                judgeData.ai2_feedback = feedbackResult.ai2_feedback || "N/A (Feedback error)";
+                judgeData.overall_round_summary = feedbackResult.overall_round_summary || "Error retrieving detailed summary.";
+                judgeData.key_talking_points = feedbackResult.key_talking_points || [];
+            } else {
+                console.error("[JudgeAI] Error getting textual feedback:", feedbackResult?.error);
+                judgeData.ai1_feedback = "Error retrieving feedback.";
+                judgeData.ai2_feedback = "Error retrieving feedback.";
+                judgeData.overall_round_summary = `Scores received. Judge API error (feedback): ${feedbackResult?.error || 'Unknown issue'}`;
+            }
+            
+            ai1Score += judgeData.ai1_points_awarded || 0; 
+            ai2Score += judgeData.ai2_points_awarded || 0;
+            updateScoreDisplay();
+            
+            const judgeMessage = `**Judge's Ruling for ${currentPhaseContext}:**\n${judgeData.overall_round_summary}\n*${ai1Name} Feedback:* ${judgeData.ai1_feedback} (Points: ${judgeData.ai1_points_awarded})\n*${ai2Name} Feedback:* ${judgeData.ai2_feedback} (Points: ${judgeData.ai2_points_awarded})\nKey Points: ${(judgeData.key_talking_points || []).join(', ') || 'None identified'}\nReady for Next Phase: ${judgeData.ready_for_next_phase}`;
+            addMessageToChat("Judge", judgeMessage, false, null, false); 
+            judgeFeedbackHistory.push(judgeMessage);
+
+            return judgeData; 
+        }
+
+
+        async function debateLoop() {
+            console.log("Entering debateLoop function"); 
+            const firstSpeakerInitial = aiOrder[0]; 
+            const secondSpeakerInitial = aiOrder[1];
+            const firstSpeakerInitialName = document.getElementById(`ai${firstSpeakerInitial}Role`).value;
+            const secondSpeakerInitialName = document.getElementById(`ai${secondSpeakerInitial}Role`).value;
+            
+            let judgeScoresPromise = null;
+            let judgeFeedbackTextPromise = null;
+            let roundSummaryPromise = null;
+            let lastJudgeFeedback = { ready_for_next_phase: true, ai1_points_awarded: 0, ai2_points_awarded:0, ai1_feedback: "N/A", ai2_feedback: "N/A", overall_round_summary: "N/A", key_talking_points: [] }; 
+
+            // --- OPENING STATEMENTS ---
+            updateCurrentPhaseDisplay('Opening Statements');
+            addMessageToChat('System', `Preparing opening volley for ${firstSpeakerInitialName}...`, false, null, true);
+            debateState.currentTurnNumber++;
+            
+            const openingStatement1Result = await prepareOpeningStatement(firstSpeakerInitial, debateState.currentAI1Instructions); 
+            addMessageToChat(firstSpeakerInitialName, openingStatement1Result.response, false, firstSpeakerInitial);
+            updateAIThoughts(firstSpeakerInitial, `Turn ${debateState.currentTurnNumber} OPENING VOLLEY (Actual):\n${openingStatement1Result.response}\n\n(Based on Mandate):\n${openingStatement1Result.thoughts}`); 
+            if (!isApiError(openingStatement1Result.response)) { 
+                conversationHistory.push({ role: firstSpeakerInitialName, content: openingStatement1Result.response });
+                if (firstSpeakerInitial === 1) lastAI1Response = openingStatement1Result.response; else lastAI2Response = openingStatement1Result.response;
+            } else { 
+                 if (firstSpeakerInitial === 1) lastAI1Response = `Error: ${firstSpeakerInitialName} failed opening.`; else lastAI2Response = `Error: ${firstSpeakerInitialName} failed opening.`;
+            }
+            let speakingPromise1 = speakTextSafe(openingStatement1Result.response, document.getElementById(`AI${firstSpeakerInitial}Voice`).value, firstSpeakerInitial);
+
+            addMessageToChat('System', `Preparing opening volley for ${secondSpeakerInitialName}...`, false, null, true);
+            const openingStatement2Promise = prepareOpeningStatement(secondSpeakerInitial, debateState.currentAI2Instructions); 
+            
+            await speakingPromise1; 
+            if (!debateActive) return;
+            
+            debateState.currentTurnNumber++;
+            const openingStatement2Result = await openingStatement2Promise;
+            addMessageToChat(secondSpeakerInitialName, openingStatement2Result.response, false, secondSpeakerInitial);
+            updateAIThoughts(secondSpeakerInitial, `Turn ${debateState.currentTurnNumber} OPENING VOLLEY (Actual):\n${openingStatement2Result.response}\n\n(Based on Mandate):\n${openingStatement2Result.thoughts}`);
+            if (!isApiError(openingStatement2Result.response)) {
+                 conversationHistory.push({ role: secondSpeakerInitialName, content: openingStatement2Result.response });
+                 if (secondSpeakerInitial === 1) lastAI1Response = openingStatement2Result.response; else lastAI2Response = openingStatement2Result.response;
+            } else { 
+                if (secondSpeakerInitial === 1) lastAI1Response = `Error: ${secondSpeakerInitialName} failed opening.`; else lastAI2Response = `Error: ${secondSpeakerInitialName} failed opening.`;
+            }
+            
+            const openingRoundAI1Speech = firstSpeakerInitial === 1 ? lastAI1Response : lastAI2Response;
+            const openingRoundAI2Speech = secondSpeakerInitial === 1 ? lastAI1Response : lastAI2Response;
+
+            addMessageToChat("System", `Judge is evaluating scores for Opening Statements...`, false, null, true);
+            judgeScoresPromise = getJudgeScoresAndReadiness(`Debate Topic: "${document.getElementById('topicInput').value}"
+Current Phase: "Opening Statements"
+Last statement from ${document.getElementById('ai1Role').value}: "${openingRoundAI1Speech}"
+Last statement from ${document.getElementById('ai2Role').value}: "${openingRoundAI2Speech}"
+Task: Provide scores (-2 to +2) for each AI and if they are ready for the next phase.
+Output ONLY in JSON format using the schema: {"ai1_points_awarded": <num>, "ai2_points_awarded": <num>, "ready_for_next_phase": <bool>}`);
+            
+            let speakingPromise2 = speakTextSafe(openingStatement2Result.response, document.getElementById(`AI${secondSpeakerInitial}Voice`).value, secondSpeakerInitial);
+            
+            const judgeScoresDataOpenings = await judgeScoresPromise;
+            if (judgeScoresDataOpenings && !judgeScoresDataOpenings.error) {
+                addMessageToChat("System", `Judge is preparing detailed feedback for Opening Statements... Summarizing round...`, false, null, true);
+                const feedbackPromptTextOpenings = `Debate Topic: "${document.getElementById('topicInput').value}"
+Current Phase: "Opening Statements"
+${document.getElementById('ai1Role').value}'s statement: "${openingRoundAI1Speech}" (${document.getElementById('ai1Role').value} awarded ${judgeScoresDataOpenings.ai1_points_awarded} points this round)
+${document.getElementById('ai2Role').value}'s statement: "${openingRoundAI2Speech}" (${document.getElementById('ai2Role').value} awarded ${judgeScoresDataOpenings.ai2_points_awarded} points this round)
+Task: Provide textual feedback. Structure with headers: "AI1 Feedback:", "AI2 Feedback:", "Overall Round Summary:", "Key Talking Points:". Be VERY CONCISE for feedback and key points.`;
+                judgeFeedbackTextPromise = getJudgeTextualFeedback(feedbackPromptTextOpenings);
+                roundSummaryPromise = generateRoundSummaryForPair(
+                    debateState.currentTurnNumber, 
+                    document.getElementById('ai1Role').value, 
+                    document.getElementById('ai2Role').value, 
+                    document.getElementById('topicInput').value,
+                    openingRoundAI1Speech, 
+                    openingRoundAI2Speech
+                );
+            } else {
+                console.error("[DebateLoop-Openings] Failed to get scores from Judge.");
+                lastJudgeFeedback = { ...judgeScoresDataOpenings, ai1_feedback: "Error", ai2_feedback: "Error", overall_round_summary: judgeScoresDataOpenings?.error || "Error fetching scores.", key_talking_points: [] };
+                judgeFeedbackTextPromise = Promise.resolve({error: "Skipped due to score error", ai1_feedback: "Error", ai2_feedback: "Error", overall_round_summary: "Error", key_talking_points: []}); 
+                roundSummaryPromise = Promise.resolve("Summary skipped due to score error."); 
+            }
+
+            await speakingPromise2; 
+            if (!debateActive) return;
+            
+            if (judgeFeedbackTextPromise && roundSummaryPromise) { 
+                const [feedbackTextData, summaryText] = await Promise.all([judgeFeedbackTextPromise, roundSummaryPromise]);
+                lastJudgeFeedback = { ...judgeScoresDataOpenings, ...feedbackTextData }; 
+                 if (summaryText && !summaryText.toLowerCase().includes("failed")) {
+                    const roundSummaryFullText = `ROUND SUMMARY (Openings - after Turn ${debateState.currentTurnNumber}):\n${summaryText}`;
+                    updateAIThoughts(1, roundSummaryFullText); 
+                    updateAIThoughts(2, roundSummaryFullText);
+                }
+            }
+            
+            ai1Score += lastJudgeFeedback.ai1_points_awarded || 0;
+            ai2Score += lastJudgeFeedback.ai2_points_awarded || 0;
+            updateScoreDisplay();
+            const finalJudgeMessageOpeningsText = `**Judge's Ruling for Opening Statements:**\n${lastJudgeFeedback.overall_round_summary || 'No summary.'}\n*${document.getElementById('ai1Role').value} Feedback:* ${lastJudgeFeedback.ai1_feedback || 'N/A'} (Points: ${lastJudgeFeedback.ai1_points_awarded || 0})\n*${document.getElementById('ai2Role').value} Feedback:* ${lastJudgeFeedback.ai2_feedback || 'N/A'} (Points: ${lastJudgeFeedback.ai2_points_awarded || 0})\nKey Points: ${(lastJudgeFeedback.key_talking_points || []).join(', ') || 'None identified'}\nReady for Next Phase: ${lastJudgeFeedback.ready_for_next_phase}`;
+            addMessageToChat("Judge", finalJudgeMessageOpeningsText, false, null, false);
+            judgeFeedbackHistory.push(finalJudgeMessageOpeningsText);
+            document.getElementById('judgeFeedbackDisplay').textContent = `Judge (Openings): ${lastJudgeFeedback.overall_round_summary || 'No summary.'}`;
+
+            // --- MAIN DEBATE PHASES ---
+            let activeSpeaker = firstSpeakerInitial; 
+            let thinkingAI = secondSpeakerInitial;  
+            
+            const debatePhases = ['FirstRebuttals', 'SecondRebuttals', 'Summaries'];
+            let currentPhaseIndex = 0;
+            currentPhase = debatePhases[currentPhaseIndex];
+            updateCurrentPhaseDisplay(currentPhase);
+            
+            let exchangesInPhase = 0;
+            
+            let nextSpeakerThinkingPromise = combinedAnalysisAndSpeechPrep(
+                activeSpeaker, 
+                conversationHistory.slice(-6), 
+                (activeSpeaker === 1 ? lastAI2Response : lastAI1Response), 
+                (activeSpeaker === 1 ? debateState.currentAI1Instructions : debateState.currentAI2Instructions), 
+                currentPhase, 
+                `Deliver your ${currentPhase}`,
+                activeSpeaker === 1 ? lastJudgeFeedback?.ai1_feedback : lastJudgeFeedback?.ai2_feedback,
+                activeSpeaker === 1 ? lastJudgeFeedback?.ai2_feedback : lastJudgeFeedback?.ai1_feedback,
+                lastJudgeFeedback?.overall_round_summary,
+                lastJudgeFeedback?.ready_for_next_phase 
+            );
+            let currentSpeakerTTSpromise = Promise.resolve(); 
+
+            while (debateActive && currentPhaseIndex < debatePhases.length) {
+                if (debatePaused) {
+                    await sleep(500);
+                    continue;
+                }
+                debateState.currentTurnNumber++;
+                const speakerName = document.getElementById(`ai${activeSpeaker}Role`).value;
+                const speakerVoice = document.getElementById(`AI${activeSpeaker}Voice`).value;
+                
+                const aiResult = await nextSpeakerThinkingPromise; 
+                if (!debateActive) break; 
+                
+                addMessageToChat(speakerName, aiResult.response, false, activeSpeaker);
+                if (!isApiError(aiResult.response)) {
+                    conversationHistory.push({ role: speakerName, content: aiResult.response });
+                }
+
+                if (activeSpeaker === 1) {
+                    lastAI1Response = !isApiError(aiResult.response) ? aiResult.response : `Error: ${speakerName} failed to generate a response.`;
+                } else { 
+                    lastAI2Response = !isApiError(aiResult.response) ? aiResult.response : `Error: ${speakerName} failed to generate a response.`;
+                }
+
+                if (!isApiError(aiResult.response) && !aiResult.response.toLowerCase().includes('my response was blocked')) { 
+                    currentSpeakerTTSpromise = speakTextSafe(aiResult.response, speakerVoice, activeSpeaker); 
+                } else {
+                    currentSpeakerTTSpromise = Promise.resolve();
+                }
+                
+                if (activeSpeaker === aiOrder[0]) { // First speaker of the pair just had their content generated and speech initiated
+                    nextSpeakerThinkingPromise = combinedAnalysisAndSpeechPrep( 
+                        thinkingAI, 
+                        conversationHistory.slice(-6), 
+                        lastAI1Response, // Opponent is AI1 (activeSpeaker who just spoke)
+                        (thinkingAI === 1 ? debateState.currentAI1Instructions : debateState.currentAI2Instructions), 
+                        currentPhase, 
+                        `Deliver your ${currentPhase}`,
+                        thinkingAI === 1 ? lastJudgeFeedback?.ai1_feedback : lastJudgeFeedback?.ai2_feedback,
+                        thinkingAI === 1 ? lastJudgeFeedback?.ai2_feedback : lastJudgeFeedback?.ai1_feedback,
+                        lastJudgeFeedback?.overall_round_summary,
+                        lastJudgeFeedback?.ready_for_next_phase
+                    );
+                } else if (activeSpeaker === aiOrder[1]) { // Second speaker of the pair just had their content generated and speech initiated
+                    const currentRoundAI1Speech = aiOrder[0] === 1 ? lastAI1Response : lastAI2Response;
+                    const currentRoundAI2Speech = aiOrder[1] === 1 ? lastAI1Response : lastAI2Response; 
+                    
+                    addMessageToChat("System", `Judge is evaluating scores for ${currentPhase}...`, false, null, true);
+                    judgeScoresPromise = getJudgeScoresAndReadiness(`Debate Topic: "${document.getElementById('topicInput').value}"
+Current Phase: "${currentPhase}"
+Last statement from ${document.getElementById(`ai${aiOrder[0]}Role`).value}: "${currentRoundAI1Speech}"
+Last statement from ${document.getElementById(`ai${aiOrder[1]}Role`).value}: "${currentRoundAI2Speech}"
+Task: Provide scores (-2 to +2) for each AI and if they are ready for the next phase.
+Output ONLY in JSON format using the schema: {"ai1_points_awarded": <num>, "ai2_points_awarded": <num>, "ready_for_next_phase": <bool>}`);
+                }
+                
+                await currentSpeakerTTSpromise; 
+                if (!debateActive) break;
+
+                if (activeSpeaker === aiOrder[1]) { // Second speaker of the pair has finished speaking
+                    const scoresData = await judgeScoresPromise;
+                    if (scoresData && !scoresData.error) {
+                        addMessageToChat("System", `Judge is preparing detailed feedback for ${currentPhase}... Summarizing round...`, false, null, true);
+                        const currentRoundAI1SpeechForFeedback = aiOrder[0] === 1 ? lastAI1Response : lastAI2Response;
+                        const currentRoundAI2SpeechForFeedback = aiOrder[1] === 1 ? lastAI1Response : lastAI2Response;
+                         const feedbackPromptText = `Debate Topic: "${document.getElementById('topicInput').value}"
+Current Phase: "${currentPhase}"
+${document.getElementById(`ai${aiOrder[0]}Role`).value}'s statement: "${currentRoundAI1SpeechForFeedback}" (${document.getElementById(`ai${aiOrder[0]}Role`).value} awarded ${scoresData.ai1_points_awarded} points this round)
+${document.getElementById(`ai${aiOrder[1]}Role`).value}'s statement: "${currentRoundAI2SpeechForFeedback}" (${document.getElementById(`ai${aiOrder[1]}Role`).value} awarded ${scoresData.ai2_points_awarded} points this round)
+Task: Provide textual feedback. Structure with headers: "AI1 Feedback:", "AI2 Feedback:", "Overall Round Summary:", "Key Talking Points:". Be VERY CONCISE for feedback and key points.`;
+                        judgeFeedbackTextPromise = getJudgeTextualFeedback(feedbackPromptText);
+                        roundSummaryPromise = generateRoundSummaryForPair(
+                            debateState.currentTurnNumber,
+                            document.getElementById(`ai${aiOrder[0]}Role`).value,
+                            document.getElementById(`ai${aiOrder[1]}Role`).value,
+                            document.getElementById('topicInput').value,
+                            currentRoundAI1SpeechForFeedback,
+                            currentRoundAI2SpeechForFeedback
+                        );
+                        
+                        const [feedbackTextData, summaryText] = await Promise.all([judgeFeedbackTextPromise, roundSummaryPromise]);
+                        lastJudgeFeedback = { ...scoresData, ...feedbackTextData };
+
+                        if (summaryText && !summaryText.toLowerCase().includes("failed")) {
+                            const roundSummaryFullText = `ROUND SUMMARY (${currentPhase} - after Turn ${debateState.currentTurnNumber}):\n${summaryText}`;
+                            updateAIThoughts(1, roundSummaryFullText); 
+                            updateAIThoughts(2, roundSummaryFullText);
+                        }
+                    } else { 
+                        lastJudgeFeedback = { ...scoresData, ai1_feedback: "Error retrieving feedback.", ai2_feedback: "Error retrieving feedback.", overall_round_summary: scoresData?.error || "Error fetching scores.", key_talking_points: [] };
+                    }
+                    
+                    if (!debateActive) break; 
+                    ai1Score += lastJudgeFeedback.ai1_points_awarded || 0; 
+                    ai2Score += lastJudgeFeedback.ai2_points_awarded || 0;
+                    updateScoreDisplay();
+                    const finalJudgeMessage = `**Judge's Ruling for ${currentPhase}:**\n${lastJudgeFeedback.overall_round_summary || 'No summary.'}\n*${document.getElementById(`ai${aiOrder[0]}Role`).value} Feedback:* ${lastJudgeFeedback.ai1_feedback || 'N/A'} (Points: ${lastJudgeFeedback.ai1_points_awarded || 0})\n*${document.getElementById(`ai${aiOrder[1]}Role`).value} Feedback:* ${lastJudgeFeedback.ai2_feedback || 'N/A'} (Points: ${lastJudgeFeedback.ai2_points_awarded || 0})\nKey Points: ${(lastJudgeFeedback.key_talking_points || []).join(', ') || 'None identified'}\nReady for Next Phase: ${lastJudgeFeedback.ready_for_next_phase}`;
+                    addMessageToChat("Judge", finalJudgeMessage, false, null, false);
+                    judgeFeedbackHistory.push(finalJudgeMessage);
+                    document.getElementById('judgeFeedbackDisplay').textContent = `Judge (${currentPhase}): ${lastJudgeFeedback.overall_round_summary || 'No summary.'}`;
+                    exchangesInPhase++;
+
+                    let advancePhase = false;
+                    if ( (lastJudgeFeedback.ready_for_next_phase === true && exchangesInPhase >=1 ) || exchangesInPhase >= MAX_EXCHANGES_PER_PHASE_HARD_LIMIT) {
+                        if (currentPhaseIndex < debatePhases.length - 1) {
+                           advancePhase = true;
+                        } else {
+                            addMessageToChat('System', "Debate has reached its final phase. Concluding.", false, null, true);
+                            debateActive = false;
+                        }
+                    }
+                    
+                    if (debateActive) { 
+                        if (advancePhase) {
+                            addMessageToChat('System', `--- Preparing for ${debatePhases[currentPhaseIndex + 1]} ---`, false, null, true);
+                            currentPhaseIndex++;
+                            currentPhase = debatePhases[currentPhaseIndex];
+                            updateCurrentPhaseDisplay(currentPhase);
+                            exchangesInPhase = 0; 
+                            addMessageToChat('System', `--- Now in ${currentPhase} ---`, false, null, true);
+                        }
+                        
+                        [activeSpeaker, thinkingAI] = [thinkingAI, activeSpeaker]; 
+                        nextSpeakerThinkingPromise = combinedAnalysisAndSpeechPrep(
+                            activeSpeaker, 
+                            conversationHistory.slice(-6), 
+                            (activeSpeaker === 1 ? lastAI2Response : lastAI1Response), 
+                            (activeSpeaker === 1 ? debateState.currentAI1Instructions : debateState.currentAI2Instructions), 
+                            currentPhase, 
+                            `Deliver your ${currentPhase}`,
+                            activeSpeaker === 1 ? lastJudgeFeedback?.ai1_feedback : lastJudgeFeedback?.ai2_feedback,
+                            activeSpeaker === 1 ? lastJudgeFeedback?.ai2_feedback : lastJudgeFeedback?.ai1_feedback,
+                            lastJudgeFeedback?.overall_round_summary,
+                            lastJudgeFeedback?.ready_for_next_phase 
+                        );
+                    }
+                } else { 
+                     [activeSpeaker, thinkingAI] = [thinkingAI, activeSpeaker]; 
+                }
+
+                if (!debateActive) break; 
+                
+                 if (debateState.currentTurnNumber > 30 && debateActive) { 
+                    addMessageToChat('System', "Debate ending due to extended length.", false, null, true);
+                    debateActive = false;
+                }
+                await sleep(100); 
+            }
+
+            // Final Verdict
+            if (!debateActive) { 
+                 addMessageToChat('System', "Debate has concluded.", false, null, true);
+                 const finalJudgePrompt = `The debate on "${document.getElementById('topicInput').value}" has concluded.
+Final Scores: ${document.getElementById('ai1Role').value}: ${ai1Score}, ${document.getElementById('ai2Role').value}: ${ai2Score}.
+Please provide a final judgment as a narrative summary, declare a winner (or a nuanced outcome if appropriate), and briefly summarize the key reasons for your decision based on the entire debate, considering the Speakers' Corner style. Do NOT use JSON format for this final verdict, just plain text.`;
+                const finalJudgementText = await getGeminiResponse(JUDGE_MODEL_ID, finalJudgePrompt, "You are the Chief Debate Judge delivering the final verdict. " + META_INSTRUCTION_SPEAKERS_CORNER, 0, false); 
+                
+                let finalVerdictDisplay = "Final judgment could not be retrieved.";
+                if (!isApiError(finalJudgementText)) {
+                    finalVerdictDisplay = `**FINAL VERDICT:**\n${finalJudgementText}\nWinner (based on points): ${ai1Score > ai2Score ? document.getElementById('ai1Role').value : (ai2Score > ai1Score ? document.getElementById('ai2Role').value : "It's a Tie!")}`;
+                } else {
+                    finalVerdictDisplay = `Judge's final verdict could not be processed: ${finalJudgementText}`;
+                }
+                addMessageToChat("Judge (Final Verdict)", finalVerdictDisplay, false, null, false);
+                 updateCurrentPhaseDisplay("Finished");
+            }
+        }
+
+        document.getElementById('chatInput').addEventListener('keyup', async function(event) {
+            if (event.key === 'Enter' && !this.disabled && this.value.trim() !== '') {
+                const userMessage = this.value.trim();
+                addMessageToChat('User', userMessage, true); 
+                conversationHistory.push({ role: 'User', content: userMessage });
+                this.value = ''; 
+                if (debateActive) {
+                    debatePaused = true; 
+                    window.speechSynthesis.cancel(); 
+                    currentSpeechSessionId++; 
+                    addMessageToChat('System', 'AIs are considering your input...', false, null, true);
+                    const ai1Name = document.getElementById('ai1Role').value || "AI1";
+                    const ai1ResponseToUser = await aiThinkAndRespondToUser(1, userMessage);
+                    addMessageToChat(ai1Name, ai1ResponseToUser.response, false, 1);
+                    if (!isApiError(ai1ResponseToUser.response)) {
+                        conversationHistory.push({ role: ai1Name, content: ai1ResponseToUser.response });
+                    }
+                    lastAI1Response = ai1ResponseToUser.response; 
+                    await speakTextSafe(ai1ResponseToUser.response, document.getElementById('AI1Voice').value, 1);
+                    
+                    const ai2Name = document.getElementById('ai2Role').value || "AI2";
+                    const ai2ResponseToUser = await aiThinkAndRespondToUser(2, userMessage);
+                    addMessageToChat(ai2Name, ai2ResponseToUser.response, false, 2);
+                     if (!isApiError(ai2ResponseToUser.response)) {
+                        conversationHistory.push({ role: ai2Name, content: ai2ResponseToUser.response });
+                    }
+                    lastAI2Response = ai2ResponseToUser.response; 
+                    await speakTextSafe(ai2ResponseToUser.response, document.getElementById('AI2Voice').value, 2);
+                    addMessageToChat('System', 'Debate continues...', false, null, true);
+                    debatePaused = false; 
+                }
+            }
+        });
+
+        function splitIntoChunks(text, maxChunkLength = 200) { 
+            const sentences = text.match(/[^.!?]+[.!?]+[\])'"`'"]*|[^.!?\n]+[\n]+|.+/g) || [text]; 
+            const chunks = [];
+            let currentChunk = '';
+            for (const sentence of sentences) {
+                if (currentChunk.length + sentence.length < maxChunkLength) {
+                    currentChunk += (currentChunk ? ' ' : '') + sentence;
+                } else {
+                    if (currentChunk) chunks.push(currentChunk.trim());
+                    currentChunk = sentence.trim(); 
+                    if (currentChunk.length >= maxChunkLength) { 
+                        chunks.push(currentChunk);
+                        currentChunk = '';
+                    }
+                }
+            }
+            if (currentChunk) chunks.push(currentChunk.trim());
+            return chunks.filter(chunk => chunk.length > 0); 
+        }
+
+        function addMessageToChat(sender, message, isUser, aiNumber, silent = false) {
+            const chatContent = document.getElementById('chatContent');
+            const messageElement = document.createElement('div');
+            messageElement.classList.add('message');
+            if (isUser) {
+                messageElement.classList.add('user-message');
+                messageElement.textContent = message; 
+            } else {
+                messageElement.classList.add('ai-message');
+                if (sender === "Judge" || sender === "Judge (Final Verdict)") {
+                    messageElement.classList.add('judge-message');
+                } else if (aiNumber) {
+                    messageElement.classList.add(aiNumber === 1 ? 'ai1-message' : 'ai2-message');
+                }
+                if (silent) {
+                    messageElement.classList.add('silent-message');
+                }
+                const aiNameElement = document.createElement('div');
+                aiNameElement.classList.add('ai-name');
+                aiNameElement.textContent = sender;
+                const aiResponseElement = document.createElement('div');
+                aiResponseElement.classList.add('ai-response');
+                const chunks = splitIntoChunks(message);
+                chunks.forEach((chunk, i) => {
+                    const span = document.createElement('span');
+                    span.textContent = chunk + (i < chunks.length -1 && !/[.!?]$/.test(chunk) ? ' ' : ''); 
+                    span.classList.add('speech-chunk');
+                    span.dataset.chunkIndex = i; 
+                    aiResponseElement.appendChild(span);
+                });
+                messageElement.appendChild(aiNameElement);
+                messageElement.appendChild(aiResponseElement);
+            }
+            chatContent.appendChild(messageElement);
+            chatContent.scrollTop = chatContent.scrollHeight;
+        }
+
+        function highlightChunkInChat(chunkIndex, currentMessageElement) {
+            if (currentMessageElement) {
+                const highlighted = currentMessageElement.querySelector('.speech-chunk.highlight-chunk');
+                if (highlighted) highlighted.classList.remove('highlight-chunk');
+                const span = currentMessageElement.querySelector(`.speech-chunk[data-chunk-index='${chunkIndex}']`);
+                if (span) span.classList.add('highlight-chunk');
+            }
+        }
+        
+        function sanitizeForSpeech(text) {
+            let clean = text;
+            clean = clean.replace(/[*_`~#]|---|\[(.*?)\]\(.*?\)|!\[(.*?)\]\(.*?\)/g, '$1$2'); 
+            clean = clean.replace(/<[^>]+>/g, ''); 
+            clean = clean.replace(/\\n/g, ' ');    
+            clean = clean.replace(/\s{2,}/g, ' '); 
+            clean = clean.replace(/([.!?])\s+/g, '$1 \n'); 
+            return clean.trim();
+        }
+
+        async function speakTextSafe(text, voiceName, aiNumber) { // Added aiNumber
+            const sidePanel = document.getElementById(aiNumber === 1 ? 'ai1Side' : 'ai2Side');
+            if (sidePanel) sidePanel.classList.add('speaking-glow');
+
+            const chatContent = document.getElementById('chatContent');
+            const allAiMessages = Array.from(chatContent.querySelectorAll('.message.ai-message'));
+            const lastVisibleAiMessage = allAiMessages.reverse().find(msg => !msg.classList.contains('silent-message'));
+            const lastMessageElement = lastVisibleAiMessage ? lastVisibleAiMessage.querySelector('.ai-response') : null;
+            
+            if (lastMessageElement && lastMessageElement.closest('.message').classList.contains('silent-message')) {
+                 if (sidePanel) sidePanel.classList.remove('speaking-glow');
+                return Promise.resolve(); 
+            }
+            if (isApiError(text)) { 
+                if (sidePanel) sidePanel.classList.remove('speaking-glow');
+                return Promise.resolve();
+            }
+
+            window.speechSynthesis.cancel(); 
+            const localSessionId = ++currentSpeechSessionId; 
+            
+            const sanitizedText = sanitizeForSpeech(text);
+            const chunks = splitIntoChunks(sanitizedText);
+            try {
+                for (let i = 0; i < chunks.length; i++) {
+                    if (!debateActive || localSessionId !== currentSpeechSessionId) { 
+                        console.log(`Speech session ${localSessionId} for AI ${aiNumber} aborted (debateActive: ${debateActive}, session: ${currentSpeechSessionId}).`);
+                        return; 
+                    }
+                    if (lastMessageElement) highlightChunkInChat(i, lastMessageElement.parentElement);
+                    await speakChunk(chunks[i], voiceName, localSessionId); 
+                    if (localSessionId === currentSpeechSessionId && lastMessageElement) {
+                        const span = lastMessageElement.parentElement.querySelector(`.speech-chunk[data-chunk-index='${i}']`);
+                        if (span) span.classList.remove('highlight-chunk');
+                    }
+                }
+            } finally {
+                if (sidePanel) sidePanel.classList.remove('speaking-glow');
+            }
+        }
+
+        function estimateSpeechTimeout(text) {
+            const words = text.trim().split(/\s+/).length;
+            const wordsPerMinute = 150; 
+            const baseTimeout = 2000; 
+            const calculatedTimeout = (words / wordsPerMinute) * 60 * 1000; 
+            return Math.max(baseTimeout, calculatedTimeout) + 5000; // Increased safety margin
+        }
+
+        async function speakChunk(text, voiceName, sessionId, retry = true) {
+            return new Promise((resolve, reject) => {
+                if (!debateActive || sessionId !== currentSpeechSessionId) {
+                    resolve(); 
+                    return;
+                }
+                const msg = new SpeechSynthesisUtterance(text);
+                const selectedVoice = voices.find(voice => voice.name === voiceName);
+                if (selectedVoice) msg.voice = selectedVoice;
+                else console.warn(`Voice not found: ${voiceName}. Using default.`);
+                
+                let timeoutId;
+
+                const cleanupAndResolve = () => {
+                    clearTimeout(timeoutId);
+                    resolve();
+                };
+
+                msg.onend = cleanupAndResolve;
+                msg.onerror = (event) => {
+                    clearTimeout(timeoutId);
+                    if (event.error === "interrupted") {
+                        console.log(`Speech chunk interrupted (Session ${sessionId}, Current ${currentSpeechSessionId}). Text: "${text.substring(0,30)}..."`);
+                    } else {
+                        console.error('SpeechSynthesis Error:', event.error, `(Session ${sessionId}) Text: "${text.substring(0,30)}..."`);
+                    }
+                    if (retry && debateActive && sessionId === currentSpeechSessionId && event.error !== "interrupted") {
+                        console.log("Retrying speech for chunk due to non-interruption error...");
+                        speakChunk(text, voiceName, sessionId, false).then(resolve).catch(reject); 
+                    } else {
+                        resolve(); 
+                    }
+                };
+
+                window.speechSynthesis.speak(msg);
+                const estimatedTime = estimateSpeechTimeout(text);
+                timeoutId = setTimeout(() => {
+                    if (debateActive && sessionId === currentSpeechSessionId) { 
+                        console.warn(`Speech chunk for session ${sessionId} hit safety timeout after ${estimatedTime}ms. Text: "${text.substring(0,30)}...". Resolving promise.`);
+                    }
+                    cleanupAndResolve(); 
+                }, estimatedTime);
+            });
+        }
+
+        function updateAIThoughts(aiNumber, thoughts) {
+            const thoughtsElement = document.getElementById(`ai${aiNumber}ThoughtsContent`);
+            const thoughtsArrayState = aiNumber === 1 ? ai1Thoughts : ai2Thoughts; 
+
+            if (!thoughts || thoughts.trim() === '') {
+                thoughts = 'No specific thoughts generated for this turn.';
+            }
+            
+            thoughtsArrayState.unshift(thoughts); 
+
+            if (thoughtsArrayState.length > 10) {
+                thoughtsArrayState.pop(); 
+            }
+            
+            thoughtsElement.innerHTML = ''; 
+            thoughtsArrayState.forEach((thought) => { 
+                const thoughtItem = document.createElement('div');
+                thoughtItem.classList.add('thought-item');
+                thoughtItem.textContent = thought; 
+                thoughtsElement.appendChild(thoughtItem); 
+            });
+            thoughtsElement.scrollTop = 0; 
+        }
+
+        function sleep(ms) {
+            return new Promise(resolve => setTimeout(resolve, ms));
+        }
+
+        ['ai1Role', 'ai2Role', 'ai1Instructions', 'ai2Instructions', 'topicInput', 'chatInput', 'geminiApiKey'].forEach(id => {
+            const element = document.getElementById(id);
+            if (element) {
+                element.addEventListener('click', function() { this.select(); });
+            }
+        });
+        
+        document.getElementById('AI1Model').addEventListener('change', function() {
+            localStorage.setItem('AI1Model', this.value);
+            ai1Model = this.value; 
+            lastWorkingModel[1] = this.value; 
+        });
+        document.getElementById('AI2Model').addEventListener('change', function() {
+            localStorage.setItem('AI2Model', this.value);
+            ai2Model = this.value; 
+            lastWorkingModel[2] = this.value; 
+        });
+
+        document.getElementById('AI1Voice').addEventListener('change', function() {
+            localStorage.setItem('AI1Voice', this.value);
+             enforceUniqueSelection(this, document.getElementById('AI2Voice'), 'AI2Voice');
+        });
+        document.getElementById('AI2Voice').addEventListener('change', function() {
+            localStorage.setItem('AI2Voice', this.value);
+            enforceUniqueSelection(this, document.getElementById('AI1Voice'), 'AI1Voice');
+        });
+        document.getElementById('ai1Role').addEventListener('change', function() { localStorage.setItem('ai1Role', this.value); updateScoreDisplay(); });
+        document.getElementById('ai2Role').addEventListener('change', function() { localStorage.setItem('ai2Role', this.value); updateScoreDisplay(); });
+        
+        document.getElementById('ai1Instructions').addEventListener('change', function() { 
+            if (!debateActive) { 
+                debateState.currentAI1Instructions = this.value; 
+                debateState.initialAI1Instructions = this.value; 
+                localStorage.setItem('originalAI1Instructions', this.value);
+            }
+        });
+        document.getElementById('ai2Instructions').addEventListener('change', function() { 
+            if (!debateActive) { 
+                debateState.currentAI2Instructions = this.value; 
+                debateState.initialAI2Instructions = this.value; 
+                localStorage.setItem('originalAI2Instructions', this.value);
+            }
+        });
+
+        // LLM Feature Buttons
+        document.getElementById('suggestTopicsBtn').addEventListener('click', async () => {
+            const topicInput = document.getElementById('topicInput');
+            const ai1InstructionsTextarea = document.getElementById('ai1Instructions');
+            const ai2InstructionsTextarea = document.getElementById('ai2Instructions');
+            const ai1Instructions = ai1InstructionsTextarea.value.trim();
+            const ai2Instructions = ai2InstructionsTextarea.value.trim();
+
+            topicInput.placeholder = "✨ Gemini is thinking of topics...";
+            topicInput.disabled = true;
+            let prompt;
+            let systemPrompt;
+            let expectTopicsOnly = true;
+            
+            if (ai1Instructions && ai2Instructions) {
+                systemPrompt = "You are a Debate Topic Tailor. Your goal is to suggest debate topics that will create interesting opposition between two AIs with pre-defined instructions, **specifically designed to elicit strong rhetoric, moral justifications, factual clashes, and opportunities for strategic misdirection or re-framing, suitable for a diverse range of historical debating styles.**";
+                prompt = `
+AI1's Instructions (Persona & Mandate): "${ai1Instructions}"
+AI2's Instructions (Persona & Mandate): "${ai2Instructions}"
+
+Suggest 5 concise and engaging debate topics that would create a fiery and confrontational Speakers' Corner style clash between these specific AI personas. Topics should be inherently divisive and allow for passionate, less formal argumentation, **with clear potential for both factual disputes and appeals to broader principles or emotional resonance, adaptable to the unique styles of historical orators.** Return as a JSON array of strings. Example: ["Topic 1", "Topic 2"]`;
+            } else {
+                expectTopicsOnly = false;
+                systemPrompt = "You are a Debate Scenario Creator. Your goal is to generate interesting debate topics AND corresponding, distinct, and adversarial core instructions for two AI debaters, suitable for a Speakers' Corner style debate.";
+                prompt = `
+Suggest 3-5 interesting and highly debatable topics suitable for a heated Speakers' Corner style debate. For EACH topic, also provide:
+1.  A concise and engaging set of core instructions for AI1 (Debater Alpha) that define a bold, outspoken, and potentially provocative persona taking a clear stance, **capable of embodying a classic debating archetype and leveraging diverse rhetorical methods.**
+2.  A concise and engaging set of core instructions for AI2 (Analyst Omega) that define an equally bold, opposing, and confrontational persona, **also capable of embodying a classic debating archetype and skilled in challenging assumptions and demanding factual justification.**
+Aim for personas that will naturally lead to strong rhetoric, emotional appeals, and direct clashes, **with ample opportunities for strategic interruptions, parallel drawing, implying inconsistency, and unique argumentative structures dictated by the chosen historical style.**
+
+Return the result as a JSON array of objects. Each object should have the following fields: "topic", "ai1_instructions", "ai2_instructions".
+Example:
+[
+  {
+    "topic": "Should all social media platforms be banned for those under 18?",
+    "ai1_instructions": "You are Debater Alpha, a 'Fiery Provocateur'...",
+    "ai2_instructions": "You are Analyst Omega, an 'Unflinching Truth-Teller'..."
+  }
+]`;
+            }
+            
+            const response = await getGeminiResponse(document.getElementById('AI1Model').value, prompt, systemPrompt, 0, true); 
+
+            topicInput.placeholder = "Enter conversation topic";
+            topicInput.disabled = false;
+
+            if (isApiError(response)) {
+                addMessageToChat("System", "✨ Topic Suggestion Failed: " + response, false, null, true);
+                return;
+            }
+            let cleanedResponse = response; 
+            try {
+                if (typeof response === 'string') { 
+                    if (response.startsWith("```json")) {
+                        cleanedResponse = response.substring(7); 
+                        if (cleanedResponse.endsWith("```")) {
+                            cleanedResponse = cleanedResponse.substring(0, cleanedResponse.length - 3);
+                        }
+                    } else if (response.startsWith("```")) { 
+                        cleanedResponse = response.substring(3);
+                        if (cleanedResponse.endsWith("```")) {
+                            cleanedResponse = cleanedResponse.substring(0, cleanedResponse.length - 3);
+                        }
+                    }
+                    cleanedResponse = cleanedResponse.trim();
+                } else {
+                    throw new Error("API response was not a string.");
+                }
+
+                if (!cleanedResponse) { 
+                    throw new Error("Cleaned API response for suggestions is empty.");
+                }
+                
+                const suggestions = JSON.parse(cleanedResponse);
+
+                if (expectTopicsOnly) {
+                    if (Array.isArray(suggestions) && suggestions.every(t => typeof t === 'string')) {
+                        displaySuggestions(suggestions, "Debate Topics (Speakers' Corner Style)", (selectedTopic) => {
+                            topicInput.value = selectedTopic;
+                        }, true); 
+                    } else {
+                        throw new Error("Response was not a valid JSON array of strings for topics only.");
+                    }
+                } else { 
+                     if (Array.isArray(suggestions) && suggestions.every(s => s.topic && s.ai1_instructions && s.ai2_instructions)) {
+                        displaySuggestions(suggestions, "Topic & Persona Suggestions (Speakers' Corner Style)", (selectedSuggestion) => {
+                            topicInput.value = selectedSuggestion.topic;
+                            ai1InstructionsTextarea.value = selectedSuggestion.ai1_instructions;
+                            ai2InstructionsTextarea.value = selectedSuggestion.ai2_instructions;
+                            if (!debateActive) {
+                                debateState.currentAI1Instructions = selectedSuggestion.ai1_instructions; 
+                                debateState.currentAI2Instructions = selectedSuggestion.ai2_instructions;
+                                debateState.initialAI1Instructions = selectedSuggestion.ai1_instructions; 
+                                debateState.initialAI2Instructions = selectedSuggestion.ai2_instructions;
+                                localStorage.setItem('originalAI1Instructions', selectedSuggestion.ai1_instructions);
+                                localStorage.setItem('originalAI2Instructions', selectedSuggestion.ai2_instructions);
+                            }
+                        }, true); 
+                    } else {
+                        throw new Error("Response was not a valid JSON array of topic/instruction objects.");
+                    }
+                }
+            } catch (e) {
+                console.error("Error parsing topic suggestions:", e, "Raw response:", response, "Cleaned response:", cleanedResponse); 
+                addMessageToChat("System", "✨ Topic Suggestion: Could not parse suggestions. Model response might be malformed or empty. Raw: " + String(response).substring(0,100) + "...", false, null, true);
+            }
+        });
+
+        async function fetchAndShowStrategyInsights() {
+            const insightsBtn = document.getElementById('getStrategyInsightsBtn');
+            insightsBtn.disabled = true;
+            insightsBtn.textContent = "✨ Fetching...";
+
+            const ai1Name = document.getElementById('ai1Role').value;
+            const ai1Instr = debateState.currentAI1Instructions; 
+            const ai2Name = document.getElementById('ai2Role').value;
+            const ai2Instr = debateState.currentAI2Instructions; 
+            const topic = document.getElementById('topicInput').value;
+
+            const prompt = `
+Analyze the upcoming Speakers' Corner style debate and provide strategic insights for an observer.
+Debate Topic: "${topic}"
+
+Debater 1 (${ai1Name}):
+Current Instructions (Persona & Mandate): "${ai1Instr}"
+
+Debater 2 (${ai2Name}):
+Current Instructions (Persona & Mandate): "${ai2Instr}"
+
+Based on this information, provide:
+1.  A brief overview of ${ai1Name}'s likely core strategy and confrontational/performative persona, **highlighting their approach to narrative control, factual assertion, opponent engagement, and the specific influence of their chosen historical archetype.**
+2.  A brief overview of ${ai2Name}'s likely core strategy and confrontational/performative persona, **highlighting their approach to narrative control, factual assertion, opponent engagement, and the specific influence of their chosen historical archetype.**
+3.  2-3 potential key clash points or interesting dynamics to watch for in this fiery debate, **specifically looking for opportunities for direct interruptions, reframing attempts, challenges to underlying assumptions, the unique application of historical/social parallels, or clashes in fundamental debating philosophies.**
+Present this as a concise, easy-to-read analysis for a human observer.`;
+
+            const insights = await getGeminiResponse(document.getElementById('AI1Model').value, prompt, "You are a debate strategy analyst providing insights to an observer. " + META_INSTRUCTION_SPEAKERS_CORNER, 0, true); 
+            
+            if (isApiError(insights)) {
+                displaySuggestions("Failed to generate strategy insights: " + insights, "Strategy Insights Error", null, false);
+            } else {
+                displaySuggestions(insights, "Debate Strategy Insights", null, false); 
+            }
+            insightsBtn.textContent = "✨ Insights"; 
+        }
+        document.getElementById('getStrategyInsightsBtn').addEventListener('click', fetchAndShowStrategyInsights);
+
+
+        async function fetchAndShowFullDebateAnalysis() {
+            const analysisBtn = document.getElementById('getFullDebateAnalysisBtn');
+            analysisBtn.disabled = true;
+            analysisBtn.textContent = "✨ Analyzing...";
+
+            const ai1Name = document.getElementById('ai1Role').value;
+            const ai1InitialInstr = debateState.initialAI1Instructions; 
+            const ai1Mandate = debateState.ai1StrategicMandate;
+            const ai2Name = document.getElementById('ai2Role').value;
+            const ai2InitialInstr = debateState.initialAI2Instructions; 
+            const ai2Mandate = debateState.ai2StrategicMandate;
+            const topic = document.getElementById('topicInput').value;
+
+            let historyString = "Debate Transcript:\n";
+            conversationHistory.forEach(msg => {
+                historyString += `${msg.role}: ${msg.content}\n`;
+            });
+
+            let judgeFeedbackString = "\n\nJudge's Feedback Throughout Debate:\n";
+            judgeFeedbackHistory.forEach((feedback, i) => {
+                judgeFeedbackString += `--- Feedback after Round ${i+1} ---\n${feedback}\n`;
+            });
+            
+            const finalScores = `Final Scores: ${ai1Name}: ${ai1Score}, ${ai2Name}: ${ai2Score}`;
+
+            const prompt = `
+Conduct a comprehensive post-debate analysis of this Speakers' Corner style debate.
+Debate Topic: "${topic}"
+
+Debater 1 (${ai1Name}):
+Initial Instructions: "${ai1InitialInstr}"
+Strategic Mandate (developed for this debate): "${ai1Mandate}"
+
+Debater 2 (${ai2Name}):
+Initial Instructions: "${ai2InitialInstr}"
+Strategic Mandate (developed for this debate): "${ai2Mandate}"
+
+${historyString}
+${judgeFeedbackString}
+${finalScores}
+
+Based on ALL the above information, provide a detailed analysis covering:
+1.  Overall summary of the debate's progression and its entertainment/impact value.
+2.  Key arguments, rhetorical tactics, and performative strategies employed by ${ai1Name}, referencing their mandate. Strengths and weaknesses in the Speakers' Corner context. **Analyze their use of bold assertions, strategic interruptions, attempts to reframe the debate, appeals to broad principles/moral justifications, and the effectiveness of their confident/authoritative delivery, specifically in how they embody their chosen historical debating archetype.**
+3.  Key arguments, rhetorical tactics, and performative strategies employed by ${ai2Name}, referencing their mandate. Strengths and weaknesses in the Speakers' Corner context. **Analyze their use of bold assertions, strategic interruptions, attempts to reframe the debate, appeals to broad principles/moral justifications, and the effectiveness of their confident/authoritative delivery, specifically in how they embody their chosen historical debating archetype.**
+4.  Pivotal moments, memorable soundbites, or turning points in the debate. **Specifically identify instances where one AI effectively shifted the burden of proof, drew powerful (or controversial) parallels, implied strong inconsistencies, used humor/sarcasm to undermine their opponent, or deployed a signature rhetorical move characteristic of their archetype.**
+5.  How effectively each AI adapted to the judge's feedback (if applicable) and maintained their persona.
+6.  Overall key takeaways or learning points from this specific debate regarding effective public oratory and engagement.
+Present this as a well-structured, insightful analysis.`;
+
+            const analysis = await getGeminiResponse(JUDGE_MODEL_ID, prompt, "You are an expert debate commentator providing a post-debate analysis. " + META_INSTRUCTION_SPEAKERS_CORNER, 0, true); 
+            
+            if (isApiError(analysis)) {
+                displaySuggestions("Failed to generate full debate analysis: " + analysis, "Debate Analysis Error", null, false);
+            } else {
+                displaySuggestions(analysis, "Full Debate Analysis", null, false);
+            }
+            analysisBtn.textContent = "✨ Full Analysis";
+            analysisBtn.disabled = false; 
+        }
+        document.getElementById('getFullDebateAnalysisBtn').addEventListener('click', fetchAndShowFullDebateAnalysis);
+
+
+        function displaySuggestions(suggestions, title, onSelectCallback, isListFormat = true) {
+            const modal = document.getElementById('suggestionModal');
+            const modalTitle = document.getElementById('suggestionModalTitle');
+            const contentArea = document.getElementById('suggestionModalContentArea');
+            const topicInput = document.getElementById('topicInput');
+            const ai1InstructionsTextarea = document.getElementById('ai1Instructions');
+            const ai2InstructionsTextarea = document.getElementById('ai2Instructions');
+            
+            modalTitle.textContent = title;
+            contentArea.innerHTML = ''; 
+
+            if (isListFormat) {
+                const ul = document.createElement('ul');
+                ul.id = 'suggestionModalList';
+                if (!suggestions || suggestions.length === 0) {
+                    const li = document.createElement('li');
+                    li.textContent = "No suggestions available.";
+                    ul.appendChild(li);
+                } else {
+                    suggestions.forEach(suggestionItem => {
+                        const li = document.createElement('li');
+                        li.textContent = typeof suggestionItem === 'object' ? suggestionItem.topic : suggestionItem;
+                        
+                        if (onSelectCallback) {
+                            li.onclick = () => {
+                                onSelectCallback(suggestionItem); 
+                                modal.style.display = "none";
+                            };
+                        }
+                        ul.appendChild(li);
+                    });
+                }
+                contentArea.appendChild(ul);
+            } else { 
+                const div = document.createElement('div');
+                div.classList.add('modal-content-text-display');
+                div.textContent = suggestions; 
+                contentArea.appendChild(div);
+            }
+            modal.style.display = "block";
+        }
+
+        document.getElementById('closeSuggestionModal').onclick = function() {
+            document.getElementById('suggestionModal').style.display = "none";
+        }
+        window.onclick = function(event) {
+            const modal = document.getElementById('suggestionModal');
+            if (event.target == modal) {
+                modal.style.display = "none";
+            }
+        }
+
+        async function enhanceInstructions(aiNumber) {
+            const instructionsTextarea = document.getElementById(`ai${aiNumber}Instructions`);
+            const currentInstructions = instructionsTextarea.value;
+            if (!currentInstructions.trim()) {
+                alert("Please enter some initial instructions before enhancing.");
+                return;
+            }
+            addMessageToChat("System", `✨ Enhancing instructions for AI ${aiNumber}...`, false, null, true);
+            instructionsTextarea.disabled = true;
+
+            const prompt = `Given the following AI debate persona instructions: "${currentInstructions}"
+Enhance them to be more suitable for a rowdy, informal, Speakers' Corner style debate. Focus on creating highly distinctive, confrontational, and potentially entertaining personas that rely on strong rhetoric, emotional appeals, and direct engagement rather than purely formal logic. Think about unique quirks, tones, or provocative rhetorical preferences. **Specifically, elevate the persona to the level of a master historical debater. Instruct the AI to fully embody the chosen archetype's unique argumentative structure, preferred rhetorical devices (e.g., Socratic method, anaphora, direct address), tone, and overall presence. Guide it to consistently apply the persona's distinctive approach to confidence, assertiveness, persuasive simplification/complexification, strategic interruptions, the ability to draw bold parallels, and a willingness to imply inconsistencies or demand factual justification from the opponent. How can the persona project an aura of unflappable authority, as defined by its archetype?**
+Provide exactly 3 distinct enhanced versions. Return as a JSON array of strings.`;
+
+            const modelForThisCall = document.getElementById(aiNumber === 1 ? 'AI1Model' : 'AI2Model').value;
+            const response = await getGeminiResponse(modelForThisCall, prompt, "You are an expert debate coach, refining AI personas for a Speakers' Corner style debate.", 0, true); 
+            
+            instructionsTextarea.disabled = false;
+            if (isApiError(response)) {
+                addMessageToChat("System", `✨ Instruction Enhancement Failed for AI ${aiNumber}: ${response}`, false, null, true);
+                return;
+            }
+            let cleanedResponse = response; 
+            try {
+                if (typeof response === 'string') {
+                    if (response.startsWith("```json")) {
+                        cleanedResponse = response.substring(7); 
+                        if (cleanedResponse.endsWith("```")) {
+                            cleanedResponse = cleanedResponse.substring(0, cleanedResponse.length - 3);
+                        }
+                    } else if (response.startsWith("```")) { 
+                        cleanedResponse = response.substring(3);
+                        if (cleanedResponse.endsWith("```")) {
+                            cleanedResponse = cleanedResponse.substring(0, cleanedResponse.length - 3);
+                        }
+                    }
+                    cleanedResponse = cleanedResponse.trim();
+                } else {
+                     throw new Error("API response was not a string for enhanceInstructions.");
+                }
+                
+                if (!cleanedResponse) {
+                     throw new Error("Cleaned API response for enhanceInstructions is empty.");
+                }
+                
+                const enhancedVersions = JSON.parse(cleanedResponse);
+                 if (Array.isArray(enhancedVersions) && enhancedVersions.length > 0 && enhancedVersions.every(v => typeof v === 'string')) {
+                    displaySuggestions(enhancedVersions, `Enhanced Instructions for AI ${aiNumber}`, (selectedInstruction) => {
+                        instructionsTextarea.value = selectedInstruction;
+                        if (!debateActive) {
+                            if (aiNumber === 1) {
+                                debateState.currentAI1Instructions = selectedInstruction;
+                                debateState.initialAI1Instructions = selectedInstruction; 
+                            } else {
+                                debateState.currentAI2Instructions = selectedInstruction;
+                                debateState.initialAI2Instructions = selectedInstruction;
+                            }
+                            localStorage.setItem(aiNumber === 1 ? 'originalAI1Instructions' : 'originalAI2Instructions', selectedInstruction);
+                        }
+                    }, true); 
+                } else {
+                    throw new Error("Response was not a valid JSON array of strings or was empty.");
+                }
+            } catch (e) {
+                console.error(`Error parsing enhanced instructions for AI ${aiNumber}:`, e, "Raw response:", response, "Cleaned response:", cleanedResponse);
+                addMessageToChat("System", `✨ Instruction Enhancement: Could not parse versions for AI ${aiNumber}. Model response: ` + String(response).substring(0,100) + "...", false, null, true);
+            }
+        }
+        document.getElementById('enhanceInstructionsAI1').addEventListener('click', () => enhanceInstructions(1));
+        document.getElementById('enhanceInstructionsAI2').addEventListener('click', () => enhanceInstructions(2));
+
+
+        window.addEventListener('DOMContentLoaded', function() {
+            const userProvidedApiKey = "AIzaSyCZtd2EL8P6WnWiCrgUvz68DAoGvpeBm9I"; 
+            const apiKeyInput = document.getElementById('geminiApiKey');
+            
+            const storedApiKey = localStorage.getItem('geminiApiKey');
+            if (storedApiKey) {
+                apiKeyInput.value = storedApiKey;
+            } else if (userProvidedApiKey) { 
+                apiKeyInput.value = userProvidedApiKey; 
+                localStorage.setItem('geminiApiKey', userProvidedApiKey); 
+            }
+
+            debateState.initialAI1Instructions = localStorage.getItem('originalAI1Instructions') || 'You are a passionate advocate for your side, using strong emotional appeals and direct challenges. Your goal is to win over the crowd with your conviction and by exposing the flaws in your opponent\'s arguments. Be assertive and confident.';
+            document.getElementById('ai1Instructions').value = debateState.initialAI1Instructions;
+            debateState.currentAI1Instructions = debateState.initialAI1Instructions;
+
+            debateState.initialAI2Instructions = localStorage.getItem('originalAI2Instructions') || 'You are a sharp-witted contrarian, focused on dismantling your opponent\'s points with logic, sarcasm, and by highlighting absurdities. Your goal is to entertain and make your opponent look foolish. Be inquisitive and cutting.';
+            document.getElementById('ai2Instructions').value = debateState.initialAI2Instructions;
+            debateState.currentAI2Instructions = debateState.initialAI2Instructions;
+            
+            const ai1Role = localStorage.getItem('ai1Role');
+            if (ai1Role) document.getElementById('ai1Role').value = ai1Role; else document.getElementById('ai1Role').value = "Debater Alpha";
+            const ai2Role = localStorage.getItem('ai2Role');
+            if (ai2Role) document.getElementById('ai2Role').value = ai2Role; else document.getElementById('ai2Role').value = "Analyst Omega";
+
+            populateModelDropdowns(); 
+            restoreModelAndVoiceSelections(); 
+            populateVoiceListAndSelectRandom(); 
+            updateScoreDisplay(); 
+
+            document.querySelectorAll('.toggle-thoughts-btn').forEach(button => {
+                button.addEventListener('click', function() {
+                    const targetId = this.dataset.target;
+                    const targetElement = document.getElementById(targetId);
+                    if (targetElement) {
+                        targetElement.classList.toggle('collapsed');
+                    }
+                });
+            });
+            document.getElementById('getStrategyInsightsBtn').disabled = true; 
+            document.getElementById('getFullDebateAnalysisBtn').disabled = true; 
+        });
+
+        document.getElementById('geminiApiKey').addEventListener('input', function() {
+            localStorage.setItem('geminiApiKey', this.value);
+        });
+
+        function restoreModelAndVoiceSelections() { 
+            const ai1ModelSelect = document.getElementById('AI1Model');
+            const ai2ModelSelect = document.getElementById('AI2Model');
+            
+            const savedAI1Model = localStorage.getItem('AI1Model');
+            const savedAI2Model = localStorage.getItem('AI2Model');
+            
+            if (savedAI1Model && availableModels.includes(savedAI1Model)) {
+                ai1ModelSelect.value = savedAI1Model;
+            } else if (availableModels.length > 0 && ai1ModelSelect.options.length > 1) { 
+                ai1ModelSelect.value = availableModels[0]; 
+                localStorage.setItem('AI1Model', ai1ModelSelect.value);
+            }
+            ai1Model = ai1ModelSelect.value; 
+            lastWorkingModel[1] = ai1Model; 
+
+            if (savedAI2Model && availableModels.includes(savedAI2Model) && savedAI2Model !== ai1ModelSelect.value) {
+                ai2ModelSelect.value = savedAI2Model;
+            } else if (availableModels.length > 0) {
+                let defaultAI2Model = availableModels.find(m => m !== ai1ModelSelect.value);
+                if (!defaultAI2Model && availableModels.length > 0) { 
+                    defaultAI2Model = availableModels[availableModels.length > 1 ? 1 : 0]; 
+                }
+                if (defaultAI2Model && Array.from(ai2ModelSelect.options).some(opt => opt.value === defaultAI2Model)) { 
+                    ai2ModelSelect.value = defaultAI2Model;
+                    localStorage.setItem('AI2Model', defaultAI2Model);
+                } else if (availableModels.length > 0 && ai2ModelSelect.options.length > 1 && ai2ModelSelect.options[1] && ai2ModelSelect.options[1].value !== "") { 
+                     ai2ModelSelect.value = ai2ModelSelect.options[1].value; 
+                     localStorage.setItem('AI2Model', ai2ModelSelect.value);
+                } else if (availableModels.length > 0 && ai2ModelSelect.options[0].value !== "") { 
+                    ai2ModelSelect.value = availableModels[0]; 
+                    localStorage.setItem('AI2Model', availableModels[0]);
+                } else if (ai2ModelSelect.options.length > 1 && ai2ModelSelect.options[1] && ai2ModelSelect.options[1].value !== "") { 
+                     ai2ModelSelect.value = ai2ModelSelect.options[1].value;
+                     localStorage.setItem('AI2Model', ai2ModelSelect.value);
+                }
+            }
+            ai2Model = ai2ModelSelect.value; 
+            lastWorkingModel[2] = ai2Model;
+            
+            // Models can be the same
+            // enforceUniqueSelection(ai1ModelSelect, ai2ModelSelect, 'AI2Model'); 
+
+            const ai1VoiceSelect = document.getElementById('AI1Voice');
+            const ai2VoiceSelect = document.getElementById('AI2Voice');
+            const savedAI1Voice = localStorage.getItem('AI1Voice');
+            if (savedAI1Voice && Array.from(ai1VoiceSelect.options).some(opt => opt.value === savedAI1Voice)) {
+                ai1VoiceSelect.value = savedAI1Voice;
+            } else {
+                selectRandomNaturalVoices(ai1VoiceSelect, 'AI1Voice');
+            }
+
+            const savedAI2Voice = localStorage.getItem('AI2Voice');
+            if (savedAI2Voice && Array.from(ai2VoiceSelect.options).some(opt => opt.value === savedAI2Voice) && savedAI2Voice !== ai1VoiceSelect.value) {
+                ai2VoiceSelect.value = savedAI2Voice;
+            } else {
+                selectRandomNaturalVoices(ai2VoiceSelect, 'AI2Voice');
+                if (ai2VoiceSelect.value === ai1VoiceSelect.value && ai1VoiceSelect.value !== "" && voices.length > 1) { 
+                    const otherVoiceOptions = Array.from(ai2VoiceSelect.options).filter(opt => opt.value !== "" && opt.value !== ai1VoiceSelect.value);
+                    if (otherVoiceOptions.length > 0) {
+                        ai2VoiceSelect.value = otherVoiceOptions[Math.floor(Math.random() * otherVoiceOptions.length)].value;
+                        localStorage.setItem('AI2Voice', ai2VoiceSelect.value);
+                    }
+                }
+            }
+             enforceUniqueSelection(ai1VoiceSelect, ai2VoiceSelect, 'AI2Voice'); 
+             enforceUniqueSelection(ai2VoiceSelect, ai1VoiceSelect, 'AI1Voice'); 
+        }
+
+
+        document.getElementById('restartDebateButton').addEventListener('click', function() {
+            window.speechSynthesis.cancel();
+            debateActive = false;
+            debatePaused = false;
+            lastAI1Response = '';
+            lastAI2Response = '';
+            ai1Thoughts = [];
+            ai2Thoughts = [];
+            conversationHistory = [];
+            ai1Score = 0;
+            ai2Score = 0;
+            judgeFeedbackHistory = [];
+            
+            debateState = { 
+                ai1StrategicMandate: "", 
+                ai2StrategicMandate: "",
+                negotiationResult: "",
+                initialAI1Instructions: localStorage.getItem('originalAI1Instructions') || 'You are a passionate advocate for your side...',
+                initialAI2Instructions: localStorage.getItem('originalAI2Instructions') || 'You are a sharp-witted contrarian...',
+                currentAI1Instructions: debateState.initialAI1Instructions,
+                currentAI2Instructions: debateState.initialAI2Instructions,
+                currentTurnNumber: 0, 
+                maxTurnSummaries: 6, 
+                turnSummaries: [],
+            };
+            
+            document.getElementById('ai1Instructions').value = debateState.initialAI1Instructions;
+            document.getElementById('ai2Instructions').value = debateState.initialAI2Instructions;
+
+            document.getElementById('topicInput').value = '';
+            document.getElementById('topicInput').disabled = false;
+            document.getElementById('topicInput').style.backgroundColor = ''; 
+            document.getElementById('chatInput').value = '';
+            document.getElementById('chatInput').disabled = true;
+            document.getElementById('chatInput').style.backgroundColor = ''; 
+            document.getElementById('chatContent').innerHTML = '<div class="message ai-message"><div class="ai-name">System</div><div class="ai-response">Debate restarted. Please enter a new topic.</div></div>';
+            document.getElementById('ai1ThoughtsContent').innerHTML = '';
+            document.getElementById('ai2ThoughtsContent').innerHTML = '';
+            document.getElementById('judgeFeedbackDisplay').textContent = 'Judge\'s Last Feedback: Awaiting first round.';
+            currentSpeechSessionId++; 
+            updateCurrentPhaseDisplay('Idle');
+            updateScoreDisplay();
+            populateModelDropdowns(); 
+            restoreModelAndVoiceSelections(); 
+            document.getElementById('getStrategyInsightsBtn').disabled = true;
+            document.getElementById('getFullDebateAnalysisBtn').disabled = true;
+        });
+        
+        async function findAndSetInitialWorkingModels() { 
+            addMessageToChat('System', 'Verifying initial models...', false, null, true);
+            console.log("[Pre-flight Check] Starting initial model probe.");
+            const testPrompt = "Briefly confirm you are operational by responding with only the words: Test OK";
+            let ai1ModelSelect = document.getElementById('AI1Model');
+            let ai2ModelSelect = document.getElementById('AI2Model');
+            
+            let currentAI1ModelForProbe = ai1ModelSelect.value;
+            console.log(`[Initial Probe AI1] Testing current UI model: ${currentAI1ModelForProbe}`);
+            let ai1Response = await getGeminiResponse(currentAI1ModelForProbe, testPrompt, "System: Test call.", 1, true); 
+            if (isApiError(ai1Response) || !ai1Response.toLowerCase().includes("test ok")) {
+                 console.warn(`[Initial Probe AI1] Model ${currentAI1ModelForProbe} failed test. (Response: ${ai1Response}).`);
+                 let foundFallback1 = false;
+                 for (const fallbackModel of availableModels.filter(m => m !== currentAI1ModelForProbe)) {
+                    console.log(`[Initial Probe AI1] Trying fallback model: ${fallbackModel}`);
+                    ai1Response = await getGeminiResponse(fallbackModel, testPrompt, "System: Test call.", 1, true); 
+                    if (!isApiError(ai1Response) && ai1Response.toLowerCase().includes("test ok")) {
+                        ai1ModelSelect.value = fallbackModel; 
+                        ai1Model = fallbackModel; 
+                        lastWorkingModel[1] = fallbackModel;
+                        localStorage.setItem('AI1Model', fallbackModel);
+                        console.log(`[Initial Probe AI1] Fallback model ${fallbackModel} passed test and set.`);
+                        foundFallback1 = true;
+                        break;
+                    }
+                    await sleep(DELAY_BETWEEN_MODEL_ATTEMPTS_MS); 
+                 }
+                 if (!foundFallback1) {
+                    addMessageToChat('System', `Warning: Initial model and fallbacks for AI1 (${currentAI1ModelForProbe}) did not respond to test.`, false, null, true);
+                    lastWorkingModel[1] = null; 
+                 } else {
+                     console.log(`[Initial Probe AI1] Fallback model ${ai1ModelSelect.value} passed test and set as last working.`);
+                 }
+            } else {
+                console.log(`[Initial Probe AI1] Model ${currentAI1ModelForProbe} passed test and set as last working.`);
+                lastWorkingModel[1] = currentAI1ModelForProbe; 
+            }
+
+            let currentAI2ModelForProbe = ai2ModelSelect.value;
+            console.log(`[Initial Probe AI2] Testing current UI model: ${currentAI2ModelForProbe}`);
+            let ai2Response = await getGeminiResponse(currentAI2ModelForProbe, testPrompt, "System: Test call.", 2, true); 
+            if (isApiError(ai2Response) || !ai2Response.toLowerCase().includes("test ok")) {
+                 console.warn(`[Initial Probe AI2] Model ${currentAI2ModelForProbe} failed test. (Response: ${ai2Response}).`);
+                 let foundFallback2 = false;
+                 for (const fallbackModel of availableModels.filter(m => m !== currentAI2ModelForProbe && m !== ai1ModelSelect.value)) { 
+                    console.log(`[Initial Probe AI2] Trying fallback model: ${fallbackModel}`);
+                    ai2Response = await getGeminiResponse(fallbackModel, testPrompt, "System: Test call.", 2, true); 
+                     if (!isApiError(ai2Response) && ai2Response.toLowerCase().includes("test ok")) {
+                        ai2ModelSelect.value = fallbackModel;
+                        ai2Model = fallbackModel; 
+                        lastWorkingModel[2] = fallbackModel;
+                        localStorage.setItem('AI2Model', fallbackModel);
+                        console.log(`[Initial Probe AI2] Fallback model ${fallbackModel} passed test and set.`);
+                        foundFallback2 = true;
+                        break;
+                    }
+                    await sleep(DELAY_BETWEEN_MODEL_ATTEMPTS_MS);
+                 }
+                 if(!foundFallback2 && availableModels.length > 0 && ai1ModelSelect.value !== availableModels.find(m => m !== ai1ModelSelect.value)) { 
+                    let anyOtherModel = availableModels.find(m => m !== ai1ModelSelect.value);
+                    if (!anyOtherModel && availableModels.length > 0) anyOtherModel = availableModels[0]; 
+                    if (anyOtherModel) {
+                         console.log(`[Initial Probe AI2] Trying any other available model: ${anyOtherModel}`);
+                         ai2Response = await getGeminiResponse(anyOtherModel, testPrompt, "System: Test call.", 2, true); 
+                         if (!isApiError(ai2Response) && ai2Response.toLowerCase().includes("test ok")) {
+                            ai2ModelSelect.value = anyOtherModel;
+                            ai2Model = anyOtherModel;
+                            lastWorkingModel[2] = anyOtherModel;
+                            localStorage.setItem('AI2Model', anyOtherModel);
+                            console.log(`[Initial Probe AI2] Fallback model ${anyOtherModel} passed test and set.`);
+                            foundFallback2 = true;
+                         }
+                    }
+                 }
+
+
+                 if (!foundFallback2) {
+                    addMessageToChat('System', `Warning: Initial model and fallbacks for AI2 (${currentAI2ModelForProbe}) did not respond to test.`, false, null, true);
+                    lastWorkingModel[2] = null;
+                 }  else {
+                     console.log(`[Initial Probe AI2] Fallback model ${ai2ModelSelect.value} passed test and set as last working.`);
+                 }
+            } else {
+                console.log(`[Initial Probe AI2] Model ${currentAI2ModelForProbe} passed test and set as last working.`);
+                 lastWorkingModel[2] = currentAI2ModelForProbe;
+            }
+            addMessageToChat('System', 'Model verification complete.', false, null, true);
+        }
+
+
+        async function startDebateFlow() { 
+            const topic = document.getElementById('topicInput').value.trim();
+            if (!topic) {
+                alert('Please enter a debate topic.');
+                return;
+            }
+            const apiKey = document.getElementById('geminiApiKey').value;
+            const currentAI1Model = document.getElementById('AI1Model').value; 
+            const currentAI2Model = document.getElementById('AI2Model').value; 
+            const ai1Voice = document.getElementById('AI1Voice').value;
+            const ai2Voice = document.getElementById('AI2Voice').value;
+
+            if (!apiKey) { alert('Please enter your Gemini API Key.'); return; }
+            if (!currentAI1Model) { alert('Please select a model for AI 1.'); return; }
+            if (!currentAI2Model) { alert('Please select a model for AI 2.'); return; }
+            if (!ai1Voice) { alert('Please select a voice for AI 1.'); return; }
+            if (!ai2Voice) { alert('Please select a voice for AI 2.'); return; }
+            
+            debateState.initialAI1Instructions = document.getElementById('ai1Instructions').value;
+            debateState.initialAI2Instructions = document.getElementById('ai2Instructions').value;
+            debateState.currentAI1Instructions = debateState.initialAI1Instructions; 
+            debateState.currentAI2Instructions = debateState.initialAI2Instructions;
+            localStorage.setItem('originalAI1Instructions', debateState.initialAI1Instructions);
+            localStorage.setItem('originalAI2Instructions', debateState.initialAI2Instructions);
+
+            document.getElementById('topicInput').disabled = true;
+            document.getElementById('chatInput').disabled = false;
+            debateActive = true;
+            debatePaused = false;
+            lastAI1Response = '';
+            lastAI2Response = '';
+            conversationHistory = [];
+            ai1Thoughts = []; 
+            ai2Thoughts = []; 
+            debateState.turnSummaries = []; 
+            debateState.currentTurnNumber = 0;
+            debateState.ai1StrategicMandate = ""; 
+            debateState.ai2StrategicMandate = "";
+            ai1Score = 0; 
+            ai2Score = 0;
+            judgeFeedbackHistory = [];
+            updateScoreDisplay();
+            lastWorkingModel = { 1: currentAI1Model, 2: currentAI2Model }; 
+
+
+            document.getElementById('chatContent').innerHTML = ''; 
+            document.getElementById('ai1ThoughtsContent').innerHTML = '';
+            document.getElementById('ai2ThoughtsContent').innerHTML = '';
+            addMessageToChat('System', `Debate topic set: "${topic}"`, false, null, true);
+            
+            await findAndSetInitialWorkingModels(); 
+            console.log("After findAndSetInitialWorkingModels: AI1 Model:", document.getElementById('AI1Model').value, "AI2 Model:", document.getElementById('AI2Model').value);
+            console.log("Last working models after probe:", lastWorkingModel);
+
+
+            await preDebateSetup(); 
+            console.log("Pre-debate setup finished. AI1 Mandate:", debateState.ai1StrategicMandate, "AI2 Mandate:", debateState.ai2StrategicMandate, "Negotiation:", debateState.negotiationResult);
+
+            if (isApiError(debateState.ai1StrategicMandate) || isApiError(debateState.ai2StrategicMandate) || isApiError(debateState.negotiationResult)) {
+                addMessageToChat('System', "Critical pre-debate API failures (mandates or negotiation). Cannot proceed with the main debate.", false, null, true);
+                updateCurrentPhaseDisplay("Error in Prep");
+                debateActive = false; 
+                document.getElementById('topicInput').disabled = false; 
+                document.getElementById('chatInput').disabled = true;
+                document.getElementById('getStrategyInsightsBtn').disabled = true;
+                return; 
+            }
+            
+            console.log("Starting debate loop...");
+            debateLoop(); 
+        }
+
+
+        document.getElementById('topicInput').addEventListener('keyup', function(event) {
+            if (event.key === 'Enter') {
+                startDebateFlow();
+            }
+        });
+        
+        async function prepareOpeningStatement(aiNumber, strategicMandate) { 
+            const aiName = document.getElementById(`ai${aiNumber}Role`).value;
+            // Use strategicMandate directly as currentAiActiveInstructions for opening
+            const currentAiModel = document.getElementById(aiNumber === 1 ? 'AI1Model' : 'AI2Model').value; 
+            const topic = document.getElementById('topicInput').value;
+            
+            const systemP = `You are ${aiName}, a debater. ${META_INSTRUCTION_SPEAKERS_CORNER} ${META_INSTRUCTION_EXPLAIN_EVIDENCE} Your current persona and strategic mandate are defined in the main prompt. Adhere to them strictly when crafting your opening volley. Remember, your entire response will be spoken, so include no non-speech elements.`;
+            const prompt = `Your current instructions (embody this persona, style, and these objectives): 
+"${strategicMandate}" 
+---
+The debate topic is: "${topic}"
+
+Task: Craft your OPENING VOLLEY (2-4 fiery sentences). Fully embody your Persona & Style.
+Make a bold, attention-grabbing claim or a direct challenge related to your stance, **immediately asserting your authority and framing the debate on your terms, consistent with your chosen archetype's foundational approach.**
+Hint at the absurdity or weakness of the opposing view (without a full argument yet), **perhaps even challenging their foundational premise, core assumptions, or moral standing, as your persona would.**
+Set a provocative or passionate tone. This isn't a polite introduction; it's a declaration.
+Your entire response will be spoken aloud by a text-to-speech engine. Therefore, it is CRITICAL that you write ONLY the words to be spoken for your opening volley. Absolutely NO stage directions, parenthetical asides, or any other non-speech text.`;
+            
+            const response = await getGeminiResponse(currentAiModel, prompt, systemP, aiNumber, false); 
+            if (isApiError(response)) {
+                return { thoughts: `System Note: Failed to generate opening statement for ${aiName} due to API issue. Mandate was: ${strategicMandate}`, response: "I am currently unable to prepare an opening statement due to a technical difficulty." };
+            }
+            return { thoughts: `Opening statement based on Strategic Mandate:\n${strategicMandate}`, response: response };
+        }
+
+        async function aiThinkAndRespondToUser(aiNumber, userMessage) { 
+            const aiName = document.getElementById(`ai${aiNumber}Role`).value;
+            const currentAiActiveInstructions = aiNumber === 1 ? debateState.currentAI1Instructions : debateState.currentAI2Instructions;
+            const currentAiModel = document.getElementById(aiNumber === 1 ? 'AI1Model' : 'AI2Model').value; 
+            const topic = document.getElementById('topicInput').value;
+            const otherAIName = document.getElementById(`ai${aiNumber === 1 ? 2 : 1}Role`).value;
+            
+            const systemP = `You are ${aiName}, a debater. ${META_INSTRUCTION_SPEAKERS_CORNER} ${META_INSTRUCTION_EXPLAIN_EVIDENCE} Your current persona and strategic mandate are defined in your instructions. Adhere to them strictly when responding to the user.`;
+            const prompt = `Your current instructions (embody this persona, style, and these objectives): "${currentAiActiveInstructions}"
+Debate Topic: "${topic}"
+You are currently in a debate with ${otherAIName}.
+A user (audience member) has interjected with the following message: "${userMessage}"
+
+Your last statement in the debate was: "${aiNumber === 1 ? lastAI1Response : lastAI2Response}"
+Your opponent's (${otherAIName}) last statement was: "${aiNumber === 1 ? lastAI2Response : lastAI1Response}"
+
+Task: Respond directly and with characteristic flair to the user's interjection (1-3 sentences).
+This is an opportunity to engage directly, like at Speakers' Corner. You can agree with them, shut them down, use their point to attack your opponent, or make a witty comeback, all while staying true to your persona and debate stance. Make it impactful!
+Your entire response will be spoken aloud by a text-to-speech engine. Therefore, it is CRITICAL that you write ONLY the words to be spoken in your response to the user. Absolutely NO stage directions, parenthetical asides, or any other non-speech text.`;
+            
+            const response = await getGeminiResponse(currentAiModel, prompt, systemP, aiNumber, false); 
+            if (isApiError(response)) {
+                 updateAIThoughts(aiNumber, `Turn ${debateState.currentTurnNumber} USER RESPONSE:\nSystem Note: Failed to generate response to user due to API issue. (Details: ${response.substring(0,60)}...)`);
+                return { thoughts: "System Note: API call for user response failed.", response: "I'm having a bit of trouble responding to that right now due to a technical issue." };
+            }
+            updateAIThoughts(aiNumber, `Responding to user: "${userMessage.substring(0,50)}..."\nMy response plan: Address user while upholding my current instructions.`);
+            return { thoughts: "Strategy for responding to user, aligned with current instructions.", response: response };
+        }
+
+    </script>
+</body>
+</html>
