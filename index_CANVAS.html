@@ -570,6 +570,17 @@
         let isProcessingJudgeQueue = false;
         let judgeQueueIntervalId = null;
 
+        // Declare and initialize lastJudgeFeedback globally
+        let lastJudgeFeedback = { 
+            ready_for_next_phase: true, 
+            ai1_points_awarded: 0, 
+            ai2_points_awarded: 0, 
+            ai1_feedback: "N/A", 
+            ai2_feedback: "N/A", 
+            overall_round_summary: "Awaiting first round.", 
+            key_talking_points: [] 
+        };
+
 
         let debateState = { 
             ai1StrategicMandate: "", 
@@ -1384,18 +1395,19 @@ Output ONLY in JSON format using the schema: {"ai1_points_awarded": <num>, "ai2_
                 judgeData.ai1_points_awarded = scoresResult.ai1_points_awarded;
                 judgeData.ai2_points_awarded = scoresResult.ai2_points_awarded;
                 judgeData.ready_for_next_phase = scoresResult.ready_for_next_phase;
+                // Add scores ONCE here based on successful scoresResult
+                ai1Score += judgeData.ai1_points_awarded;
+                ai2Score += judgeData.ai2_points_awarded;
             } else {
                 console.error("[JudgeAI] Error getting scores/readiness:", scoresResult?.error);
-                judgeData.overall_round_summary = `Judge API error (scores): ${scoresResult?.error || 'Unknown issue'}`;
-                // Scores are critical, update UI and return
-                ai1Score += judgeData.ai1_points_awarded; 
-                ai2Score += judgeData.ai2_points_awarded;
-                updateScoreDisplay();
-                const judgeErrorMessage = `**Judge's Ruling for ${currentPhaseContext}:**\n${judgeData.overall_round_summary}\n*${ai1Name} Feedback:* Error retrieving. (Points: ${judgeData.ai1_points_awarded})\n*${ai2Name} Feedback:* Error retrieving. (Points: ${judgeData.ai2_points_awarded})\nKey Points: Error retrieving.\nReady for Next Phase: ${judgeData.ready_for_next_phase}`;
-                addMessageToChat("Judge", judgeErrorMessage, false, null, false); 
-                judgeFeedbackHistory.push(judgeErrorMessage);
-                return judgeData; 
+                judgeData.overall_round_summary = `Judge API error (scores): ${scoresResult?.error || 'Unknown issue'}. Scores for this round will be 0.`;
+                // Ensure scores are 0 if there was an error getting them
+                judgeData.ai1_points_awarded = 0;
+                judgeData.ai2_points_awarded = 0;
+                judgeData.ready_for_next_phase = false; // Sensible default if scores failed
+                // ai1Score and ai2Score are not incremented here as points are 0
             }
+            // updateScoreDisplay will be called after feedback is processed, reflecting the (potentially 0) points from this round.
 
             const feedbackPromptText = `Debate Topic: "${topic}"
 Current Phase: "${currentPhaseContext}"
@@ -1418,11 +1430,10 @@ Structure your response with clear headers: "AI1 Feedback:", "AI2 Feedback:", "O
                 console.error("[JudgeAI] Error getting textual feedback:", feedbackResult?.error);
                 judgeData.ai1_feedback = "Error retrieving feedback.";
                 judgeData.ai2_feedback = "Error retrieving feedback.";
-                judgeData.overall_round_summary = `Scores received. Judge API error (feedback): ${feedbackResult?.error || 'Unknown issue'}`;
+                judgeData.overall_round_summary = `Judge API error (feedback): ${feedbackResult?.error || 'Unknown issue'}. Scores from this round: AI1: ${judgeData.ai1_points_awarded}, AI2: ${judgeData.ai2_points_awarded}.`;
             }
             
-            ai1Score += judgeData.ai1_points_awarded || 0; 
-            ai2Score += judgeData.ai2_points_awarded || 0;
+            // Scores (potentially 0 if error in scoresResult) are already added. Now update display.
             updateScoreDisplay();
             
             const judgeMessage = `**Judge's Ruling for ${currentPhaseContext}:**\n${judgeData.overall_round_summary}\n*${ai1Name} Feedback:* ${judgeData.ai1_feedback} (Points: ${judgeData.ai1_points_awarded})\n*${ai2Name} Feedback:* ${judgeData.ai2_feedback} (Points: ${judgeData.ai2_points_awarded})\nKey Points: ${(judgeData.key_talking_points || []).join(', ') || 'None identified'}\nReady for Next Phase: ${judgeData.ready_for_next_phase}`;
@@ -1430,6 +1441,59 @@ Structure your response with clear headers: "AI1 Feedback:", "AI2 Feedback:", "O
             judgeFeedbackHistory.push(judgeMessage);
 
             return judgeData; 
+        }
+
+        async function processJudgeQueueLogic() {
+            if (isProcessingJudgeQueue || judgeEvaluationQueue.length === 0) {
+                return;
+            }
+            isProcessingJudgeQueue = true;
+            console.log(`[JudgeQueue] Starting processing. Queue length: ${judgeEvaluationQueue.length}`);
+            const task = judgeEvaluationQueue.shift();
+
+            if (task) {
+                try {
+                    console.log(`[JudgeQueue] Processing task for phase: ${task.phase}, Turn: ${task.currentTurnNumber}`);
+                    const judgeResult = await callJudgeAI(task.ai1Response, task.ai2Response, task.phase);
+                    lastJudgeFeedback = judgeResult; // Store the full result
+
+                    const judgeFeedbackDisplay = document.getElementById('judgeFeedbackDisplay');
+                    if (judgeResult && !judgeResult.error) {
+                        // Format a concise summary for the display
+                        let displaySummary = `Last Round (${task.phase}): ${judgeResult.overall_round_summary || 'Summary unavailable.'}`;
+                        if (judgeResult.key_talking_points && judgeResult.key_talking_points.length > 0) {
+                            displaySummary += ` Key Points: ${judgeResult.key_talking_points.join(', ')}.`;
+                        }
+                         displaySummary += ` Scores: ${task.ai1Name}: ${judgeResult.ai1_points_awarded}, ${task.ai2Name}: ${judgeResult.ai2_points_awarded}.`;
+                        judgeFeedbackDisplay.textContent = displaySummary;
+                    } else {
+                        judgeFeedbackDisplay.textContent = `Judge's Feedback: Error processing feedback for ${task.phase}. (${judgeResult?.error || 'Unknown error'})`;
+                        console.error(`[JudgeQueue] Error in judgeResult for task ${task.phase}:`, judgeResult?.error);
+                    }
+                    console.log(`[JudgeQueue] Processing complete for task: ${task.phase}, Turn: ${task.currentTurnNumber}. LastJudgeFeedback updated:`, lastJudgeFeedback);
+                } catch (error) {
+                    console.error(`[JudgeQueue] Error processing judge task for phase ${task?.phase}:`, error);
+                    document.getElementById('judgeFeedbackDisplay').textContent = `Judge's Feedback: Critical error during evaluation for ${task?.phase}.`;
+                    // Optionally, re-queue the task or handle error more robustly
+                }
+            } else {
+                 console.log("[JudgeQueue] Shifted task was undefined (queue might have been emptied concurrently).");
+            }
+
+            // Finally block ensures this is always executed
+            isProcessingJudgeQueue = false;
+            console.log(`[JudgeQueue] Finished processing cycle. isProcessingJudgeQueue set to false.`);
+        }
+
+        const JUDGE_QUEUE_INTERVAL = 2500; // Milliseconds
+
+        function initializeJudgeQueueProcessor() {
+            if (judgeQueueIntervalId) {
+                clearInterval(judgeQueueIntervalId);
+                console.log(`[JudgeQueue] Cleared existing interval ID: ${judgeQueueIntervalId}`);
+            }
+            judgeQueueIntervalId = setInterval(processJudgeQueueLogic, JUDGE_QUEUE_INTERVAL);
+            console.log(`[JudgeQueue] Judge queue processor STARTED with interval ID: ${judgeQueueIntervalId} and interval time: ${JUDGE_QUEUE_INTERVAL}ms`);
         }
 
 
@@ -1443,7 +1507,7 @@ Structure your response with clear headers: "AI1 Feedback:", "AI2 Feedback:", "O
             let judgeScoresPromise = null;
             let judgeFeedbackTextPromise = null;
             let roundSummaryPromise = null;
-            let lastJudgeFeedback = { ready_for_next_phase: true, ai1_points_awarded: 0, ai2_points_awarded:0, ai1_feedback: "N/A", ai2_feedback: "N/A", overall_round_summary: "N/A", key_talking_points: [] }; 
+            // let lastJudgeFeedback = { ready_for_next_phase: true, ai1_points_awarded: 0, ai2_points_awarded:0, ai1_feedback: "N/A", ai2_feedback: "N/A", overall_round_summary: "N/A", key_talking_points: [] }; 
 
             // --- OPENING STATEMENTS ---
             updateCurrentPhaseDisplay('Opening Statements');
@@ -1516,6 +1580,9 @@ Structure your response with clear headers: "AI1 Feedback:", "AI2 Feedback:", "O
             
             // The `lastJudgeFeedback` variable will be updated by the queue processor.
             // UI updates for scores and judge feedback will also be handled by the queue processor.
+            // Initialize judgeFeedbackDisplay with the global lastJudgeFeedback
+            document.getElementById('judgeFeedbackDisplay').textContent = `Judge's Last Feedback: ${lastJudgeFeedback.overall_round_summary || "Awaiting first round."}`;
+
 
             // --- MAIN DEBATE PHASES ---
             let activeSpeaker = firstSpeakerInitial; 
@@ -1625,8 +1692,8 @@ Structure your response with clear headers: "AI1 Feedback:", "AI2 Feedback:", "O
                     // when the judge queue processing results are integrated back into the debate state.
                     // For now, we comment out the part that depends on `lastJudgeFeedback`.
                     let advancePhase = false;
-                    if (exchangesInPhase >= MAX_EXCHANGES_PER_PHASE_HARD_LIMIT) {
-                    // if ( (lastJudgeFeedback.ready_for_next_phase === true && exchangesInPhase >=1 ) || exchangesInPhase >= MAX_EXCHANGES_PER_PHASE_HARD_LIMIT) { // Original logic
+            // Use the global lastJudgeFeedback here, which is updated by the queue
+            if ( (lastJudgeFeedback.ready_for_next_phase === true && exchangesInPhase >=1 ) || exchangesInPhase >= MAX_EXCHANGES_PER_PHASE_HARD_LIMIT) { 
                         if (currentPhaseIndex < debatePhases.length - 1) {
                            advancePhase = true;
                         } else {
@@ -2419,6 +2486,7 @@ Provide exactly 3 distinct enhanced versions. Return as a JSON array of strings.
             document.getElementById('getStrategyInsightsBtn').disabled = true; 
             document.getElementById('getFullDebateAnalysisBtn').disabled = true; 
             initializeSpeechQueueProcessor(); // Initialize the speech queue processor once on DOM load
+            initializeJudgeQueueProcessor(); // Initialize the judge queue processor once on DOM load
         });
 
         document.getElementById('geminiApiKey').addEventListener('input', function() {
@@ -2548,6 +2616,7 @@ Provide exactly 3 distinct enhanced versions. Return as a JSON array of strings.
             textResponseQueue.length = 0; 
             isSpeakingFromQueue = false; 
             initializeSpeechQueueProcessor(); // Restart the interval
+            initializeJudgeQueueProcessor(); // Restart the judge queue interval
         });
         
         async function findAndSetInitialWorkingModels() { 
